@@ -2,6 +2,9 @@
 
 # Split Companion
 
+[![Validation](https://github.com/andreaconfa/SplitCompanion/actions/workflows/validate.yml/badge.svg)](https://github.com/andreaconfa/SplitCompanion/actions/workflows/validate.yml)
+[![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
+
 **Shared expenses. Your server. Your data.**
 
 Split bills, manage shared subscriptions and keep track of who owes what — from
@@ -10,9 +13,10 @@ friends and small private groups, with a consistent interface across devices.
 
 **[Installation guide](wiki/Installation.md)** · **[Documentation](wiki/Home.md)** · **[Roadmap](ROADMAP.md)** · **[Security](SECURITY.md)**
 
-> **Release candidate 1.2.0-rc.3.** Public registry distribution is being prepared.
-> Published releases will provide the exact image name, version and digest.
-> You can build from source or load the prepared Docker image archives.
+> **Release candidate 1.2.0-rc.4 — private preview.** Repository and package access
+> require authorization until public launch. The release workflow builds
+> `ghcr.io/andreaconfa/splitcompanion:1.2.0-rc.4`; use it after the workflow succeeds.
+> Find checksums, image digest and source in the [release](https://github.com/andreaconfa/SplitCompanion/releases/tag/v1.2.0-rc.4).
 
 ## One app, across your devices
 
@@ -74,7 +78,7 @@ are development previews. Native iOS source is not included in this repository.*
 You need Docker Engine with the Compose plugin and a local disk on a Linux server
 (amd64 / x86-64, Intel or AMD). Run **one replica and one worker**. Do not put SQLite on NFS or SMB.
 
-1. Download `compose.yaml` and `.env.example` from the same release.
+1. Download `compose.yaml` and `.env.example` from the [same release](https://github.com/andreaconfa/SplitCompanion/releases/tag/v1.2.0-rc.4).
 2. Prepare the configuration and persistent directories:
 
    ```sh
@@ -82,12 +86,14 @@ You need Docker Engine with the Compose plugin and a local disk on a Linux serve
    sudo install -d -m 0700 -o 10001 -g 10001 data backups
    ```
 
-3. Set `SPLIT_COMPANION_IMAGE` in `.env` to the published image name and version or
-   digest. For an image archive, run `docker load -i splitcompanion-amd64.tar`
-   first and use its documented tag. Alternatively, [build from source](docs/native.md).
+3. The example selects `ghcr.io/andreaconfa/splitcompanion:1.2.0-rc.4`. You can pin
+   the digest from the release instead. During the private preview, authenticate
+   Docker to GHCR with an account granted package access ([GitHub instructions](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-to-the-container-registry)).
+   Alternatively, [build from source](docs/native.md).
 4. Start the application and generate the initial setup code:
 
    ```sh
+   docker compose pull
    docker compose up -d
    docker compose exec app python -m app.cli setup-token
    ```

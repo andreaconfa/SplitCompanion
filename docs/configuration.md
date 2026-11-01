@@ -6,7 +6,7 @@ generates an instance secret and stores it in `data/secret.key`.
 
 | Compose variable | Default | Purpose |
 | --- | --- | --- |
-| `SPLIT_COMPANION_IMAGE` | `splitcompanion:1.2.0-rc.3` | Local build tag; use the image/version or digest from your release |
+| `SPLIT_COMPANION_IMAGE` | `ghcr.io/andreaconfa/splitcompanion:1.2.0-rc.4` | Official image; pin a release version or digest |
 | `SPLIT_COMPANION_DATA_DIR` | `./data` | Existing persistent host directory, owned by UID/GID 10001 |
 | `SPLIT_COMPANION_BACKUP_DIR` | `./backups` | Existing host backup directory, owned by UID/GID 10001 |
 | `SPLIT_COMPANION_BIND` | `127.0.0.1` | Host interface on which to publish the port |

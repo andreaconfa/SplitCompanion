@@ -3,13 +3,25 @@
 The corresponding source is included in each release and is available at
 `/api/source` in official container builds. The native iOS app is not required.
 
+## Get the source
+
+Download the corresponding source archive from the [release](https://github.com/andreaconfa/SplitCompanion/releases), or clone the release tag:
+
+```sh
+git clone --branch v1.2.0-rc.4 --single-branch https://github.com/andreaconfa/SplitCompanion.git
+cd SplitCompanion
+```
+
+While the repository is private, access requires permission from its owner.
+
 ## Build the container on Linux
 
 From the source directory:
 
 ```sh
-docker build --platform linux/amd64 -t splitcompanion:1.2.0-rc.3 .
+docker build --platform linux/amd64 -t splitcompanion:1.2.0-rc.4 .
 cp .env.example .env
+sed -i 's|^SPLIT_COMPANION_IMAGE=.*|SPLIT_COMPANION_IMAGE=splitcompanion:1.2.0-rc.4|' .env
 sudo install -d -m 0700 -o 10001 -g 10001 data backups
 docker compose up -d
 docker compose exec app python -m app.cli setup-token

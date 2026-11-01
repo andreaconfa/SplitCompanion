@@ -57,6 +57,11 @@ jobs:
           load: true
           push: false
           tags: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.version=${{ steps.names.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=AGPL-3.0-only
       - run: python3 scripts/container-smoke.py --image "$IMAGE"
         env:
           IMAGE: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}
@@ -65,6 +70,15 @@ jobs:
           image-ref: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}
           exit-code: '1'
           ignore-unfixed: true
+          severity: CRITICAL,HIGH
+      - name: Record remaining high and critical findings
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}
+          format: json
+          output: security-scan.json
+          exit-code: '0'
+          ignore-unfixed: false
           severity: CRITICAL,HIGH
       - uses: docker/login-action@v3
         with:
@@ -83,5 +97,5 @@ jobs:
           set -euo pipefail
           docker buildx imagetools inspect "$IMAGE" > image-digests.txt
           python3 scripts/make-source-archive.py --output splitcompanion-source.tar.gz
-          sha256sum splitcompanion-source.tar.gz > SHA256SUMS
-          gh release upload "$RELEASE_TAG" splitcompanion-source.tar.gz SHA256SUMS image-digests.txt compose.yaml .env.example
+          sha256sum splitcompanion-source.tar.gz image-digests.txt security-scan.json compose.yaml .env.example > SHA256SUMS
+          gh release upload "$RELEASE_TAG" splitcompanion-source.tar.gz SHA256SUMS image-digests.txt security-scan.json compose.yaml .env.example
