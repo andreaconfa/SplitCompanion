@@ -80,6 +80,14 @@ default. Administrators can change the server's default currency in **Settings â
 Administration**. It applies to new records only; existing expenses, balances and
 subscription charges keep their currencies. There is no currency conversion.
 
+## Updating from rc.5 or rc.6
+
+Version `1.2.1-rc.1` fixes the disabled Update button caused by the legacy
+`-homeassistant` version suffix. Refresh the App store, then update the existing
+App. Its slug, settings and persistent data remain unchanged. Do not reinstall.
+The App now pulls `ghcr.io/andreaconfa/splitcompanion-homeassistant`, with the same
+version as the server and no suffix in the version number.
+
 ## Troubleshooting
 
 - **App missing:** update the repository list and check that the device uses

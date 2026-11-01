@@ -74,7 +74,7 @@ are development previews. Native iOS source is not included in this repository.*
 You need Docker Engine with the Compose plugin and a local disk on a Linux server
 (amd64 / x86-64 or arm64 / aarch64). Run **one replica and one worker**. Do not put SQLite on NFS or SMB.
 
-1. Download `compose.yaml` and `env.example` from the [same release](https://github.com/andreaconfa/SplitCompanion/releases/tag/v1.2.0-rc.6).
+1. Download `compose.yaml` and `env.example` from the [same release](https://github.com/andreaconfa/SplitCompanion/releases/tag/v1.2.1-rc.1).
 2. Prepare the configuration and persistent directories:
 
    ```sh
@@ -82,7 +82,7 @@ You need Docker Engine with the Compose plugin and a local disk on a Linux serve
    sudo install -d -m 0700 -o 10001 -g 10001 data backups
    ```
 
-3. The example selects `ghcr.io/andreaconfa/splitcompanion:1.2.0-rc.6`. You can pin
+3. The example selects `ghcr.io/andreaconfa/splitcompanion:1.2.1-rc.1`. You can pin
    the digest from the release instead.
    Alternatively, [build from source](docs/native.md).
 4. Start the application and generate the initial setup code:

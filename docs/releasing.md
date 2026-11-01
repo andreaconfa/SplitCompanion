@@ -38,8 +38,8 @@ Repository visibility and package visibility are separate settings.
 ## Manual build and attachments
 
 ```sh
-docker build --platform linux/amd64 -t splitcompanion:1.2.0-rc.6 .
-docker save -o splitcompanion-amd64.tar splitcompanion:1.2.0-rc.6
+docker build --platform linux/amd64 -t splitcompanion:1.2.1-rc.1 .
+docker save -o splitcompanion-amd64.tar splitcompanion:1.2.1-rc.1
 python3 scripts/make-source-archive.py --output splitcompanion-source.tar.gz
 sha256sum splitcompanion-amd64.tar splitcompanion-source.tar.gz > SHA256SUMS
 ```
@@ -64,5 +64,12 @@ your wiki repository after enabling it. Update the wiki with each release and
 check links on the destination service.
 
 The release workflow also tests and publishes the Home Assistant variant using
-`<version>-homeassistant`. Keep its manifest version in sync with the server release.
-The same public package hosts both multi-architecture manifests.
+`ghcr.io/<owner>/<repository>-homeassistant:<version>`. Keep its manifest version
+identical to the server release, with no image-variant suffix. Both packages must
+be public before advancing the default branch. A new GHCR package may start private;
+verify its visibility and anonymous downloads separately.
+
+Home Assistant uses AwesomeVersion to compare App versions. The regression suite
+checks upgrades from both legacy `1.2.0-rc.N-homeassistant` packages and future
+candidate/stable version ordering. Do not append `-homeassistant` to the version: use
+the separate image repository to distinguish the variant.

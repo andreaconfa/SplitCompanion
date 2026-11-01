@@ -8,7 +8,7 @@ The corresponding source is included in each release and is available at
 Download the corresponding source archive from the [release](https://github.com/andreaconfa/SplitCompanion/releases), or clone the release tag:
 
 ```sh
-git clone --branch v1.2.0-rc.6 --single-branch https://github.com/andreaconfa/SplitCompanion.git
+git clone --branch v1.2.1-rc.1 --single-branch https://github.com/andreaconfa/SplitCompanion.git
 cd SplitCompanion
 ```
 
@@ -17,9 +17,9 @@ cd SplitCompanion
 From the source directory:
 
 ```sh
-docker build -t splitcompanion:1.2.0-rc.6 .
+docker build -t splitcompanion:1.2.1-rc.1 .
 cp .env.example .env
-sed -i 's|^SPLIT_COMPANION_IMAGE=.*|SPLIT_COMPANION_IMAGE=splitcompanion:1.2.0-rc.6|' .env
+sed -i 's|^SPLIT_COMPANION_IMAGE=.*|SPLIT_COMPANION_IMAGE=splitcompanion:1.2.1-rc.1|' .env
 sudo install -d -m 0700 -o 10001 -g 10001 data backups
 docker compose up -d
 docker compose exec app python -m app.cli setup-token

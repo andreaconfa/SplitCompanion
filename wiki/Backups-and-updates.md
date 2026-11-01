@@ -53,7 +53,7 @@ docker run --rm --network none --read-only --cap-drop ALL \
   --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=64m \
   --mount "type=bind,src=$PWD/data-restored,dst=/data" \
   --mount "type=bind,src=$PWD/backups,dst=/backups,readonly" \
-  ghcr.io/andreaconfa/splitcompanion:1.2.0-rc.6 python -m app.cli restore /backups/ARCHIVE.tar.gz --confirm
+  ghcr.io/andreaconfa/splitcompanion:1.2.1-rc.1 python -m app.cli restore /backups/ARCHIVE.tar.gz --confirm
 ```
 
 The command verifies the archive, checksums, database integrity and compatibility.

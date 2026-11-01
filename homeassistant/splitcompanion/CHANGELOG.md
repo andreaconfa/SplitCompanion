@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.1-rc.1
+
+- Fix the disabled Update button: use a version Home Assistant correctly orders
+  after both legacy rc.5 and rc.6 packages.
+- Publish the Home Assistant image in its own repository, keeping standard semantic
+  version tags and the same App slug, settings and persistent data.
+- Keep automatic first-run setup codes from the previous release.
+
 ## 1.2.0-rc.6-homeassistant
 
 - Generate the initial setup code automatically and show it in the App Log tab.

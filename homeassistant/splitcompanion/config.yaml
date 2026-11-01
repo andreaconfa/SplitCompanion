@@ -1,12 +1,12 @@
 name: Split Companion
-version: "1.2.0-rc.6-homeassistant"
+version: "1.2.1-rc.1"
 slug: splitcompanion
 description: Private shared expenses, subscriptions and balances with a web app and PWA.
 url: https://github.com/andreaconfa/SplitCompanion
 arch:
   - amd64
   - aarch64
-image: ghcr.io/andreaconfa/splitcompanion
+image: ghcr.io/andreaconfa/splitcompanion-homeassistant
 startup: application
 boot: auto
 init: true

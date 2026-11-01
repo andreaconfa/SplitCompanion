@@ -121,20 +121,20 @@ jobs:
           target: homeassistant
           platforms: ${{ matrix.platform }}
           load: true
-          tags: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}-homeassistant-${{ matrix.arch }}
+          tags: ${{ steps.names.outputs.image }}-homeassistant:${{ steps.names.outputs.version }}-${{ matrix.arch }}
           build-args: |
-            BUILD_VERSION=${{ steps.names.outputs.version }}-homeassistant
+            BUILD_VERSION=${{ steps.names.outputs.version }}
             BUILD_ARCH=${{ matrix.arch }}
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
-            org.opencontainers.image.version=${{ steps.names.outputs.version }}-homeassistant
+            org.opencontainers.image.version=${{ steps.names.outputs.version }}
             org.opencontainers.image.licenses=AGPL-3.0-only
       - run: python3 scripts/homeassistant-smoke.py --image "$IMAGE"
         env:
-          IMAGE: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}-homeassistant-${{ matrix.arch }}
+          IMAGE: ${{ steps.names.outputs.image }}-homeassistant:${{ steps.names.outputs.version }}-${{ matrix.arch }}
       - run: docker push "$IMAGE"
         env:
-          IMAGE: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}-homeassistant-${{ matrix.arch }}
+          IMAGE: ${{ steps.names.outputs.image }}-homeassistant:${{ steps.names.outputs.version }}-${{ matrix.arch }}
       - uses: actions/upload-artifact@v4
         with:
           name: security-scan-${{ matrix.arch }}
@@ -169,9 +169,9 @@ jobs:
           VERSION="${RELEASE_TAG#v}"
           IMAGE="ghcr.io/${REPOSITORY,,}"
           docker buildx imagetools create -t "$IMAGE:$VERSION" "$IMAGE:$VERSION-amd64" "$IMAGE:$VERSION-aarch64"
-          docker buildx imagetools create -t "$IMAGE:$VERSION-homeassistant" "$IMAGE:$VERSION-homeassistant-amd64" "$IMAGE:$VERSION-homeassistant-aarch64"
+          docker buildx imagetools create -t "$IMAGE-homeassistant:$VERSION" "$IMAGE-homeassistant:$VERSION-amd64" "$IMAGE-homeassistant:$VERSION-aarch64"
           docker buildx imagetools inspect "$IMAGE:$VERSION" > image-digests.txt
-          docker buildx imagetools inspect "$IMAGE:$VERSION-homeassistant" >> image-digests.txt
+          docker buildx imagetools inspect "$IMAGE-homeassistant:$VERSION" >> image-digests.txt
           python3 scripts/make-source-archive.py --output splitcompanion-source.tar.gz
           cp scans/security-scan-amd64/security-scan.json security-scan-amd64.json
           cp scans/security-scan-aarch64/security-scan.json security-scan-arm64.json
