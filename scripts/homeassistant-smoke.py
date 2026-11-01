@@ -13,6 +13,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--image', required=True)
 args = parser.parse_args()
 name = 'split-ha-smoke-' + secrets.token_hex(5)
+network = name + '-network'
 
 
 def docker(*args):
@@ -42,7 +43,7 @@ def stop():
 
 
 def start(data):
-    docker('run', '-d', '--name', name, '--network', 'none', '--read-only',
+    docker('run', '-d', '--name', name, '--network', network, '--ip', '172.30.32.3', '--read-only',
            '--security-opt', 'no-new-privileges', '--tmpfs', '/tmp:rw,noexec,nosuid,size=64m',
            '--mount', f'type=bind,src={data},dst=/data', args.image)
     for _ in range(60):
@@ -55,12 +56,59 @@ def start(data):
     raise RuntimeError('Home Assistant adapter did not become ready')
 
 
+def ingress_checks(password):
+    # A disposable client uses the documented Supervisor peer address. No host ports.
+    code = r'''import json,re,sys,urllib.request,urllib.error
+prefix='/api/hassio_ingress/smoke_token'
+headers={'X-Ingress-Path':prefix,'X-Forwarded-Host':'ha.example:8123','X-Forwarded-Proto':'http'}
+def req(path,body=None,extra=None,expected=200):
+    data=None if body is None else json.dumps(body).encode()
+    h={**headers,**(extra or {})}
+    if data is not None: h['Content-Type']='application/json'
+    r=urllib.request.Request('http://172.30.32.3:8099'+path,data=data,headers=h)
+    try:
+        with urllib.request.urlopen(r,timeout=10) as response:
+            assert response.status==expected
+            return response.read(),response.headers
+    except urllib.error.HTTPError as error:
+        assert error.code==expected,error.code
+        return error.read(),error.headers
+body,h=req('/groups/1')
+assert ('<base href="'+prefix+'/"').encode() in body
+assert b'<meta name="split-ingress" content="true">' in body
+assert h['X-Frame-Options']=='SAMEORIGIN'
+for asset in re.findall(r'(?:src|href)="(\./[^\"]+)"',body.decode()):
+    req('/'+asset[2:])
+req('/api/auth/me',expected=401)
+body,h=req('/api/auth/login',{'username':'ha-smoke','password':sys.argv[1]}, {'Origin':'http://ha.example:8123'})
+assert 'split_ingress_session=' in h['Set-Cookie'] and ('Path='+prefix+'/') in h['Set-Cookie']
+headers['Cookie']=h['Set-Cookie'].split(';',1)[0]
+csrf=json.loads(body)['csrf_token']
+req('/api/auth/me')
+req('/api/auth/logout',{},expected=403)
+headers['X-CSRF-Token']=csrf
+req('/api/auth/logout',{}, {'Origin':'https://evil.example'},expected=403)
+_,h=req('/api/auth/logout',{}, {'Origin':'http://ha.example:8123'})
+assert ('Path='+prefix+'/') in h['Set-Cookie']
+req('/api/auth/me',expected=401)
+print('PASS: trusted Ingress assets, account session, CSRF and logout')'''
+    print(docker('run', '--rm', '--network', network, '--ip', '172.30.32.2',
+                 '--read-only', '--entrypoint', 'python', args.image, '-c', code, password))
+    # Even localhost must not reach the Ingress listener by spoofing proxy headers.
+    reject = '''import urllib.request,urllib.error
+try:
+    urllib.request.urlopen(urllib.request.Request('http://127.0.0.1:8099/api/meta',headers={'X-Forwarded-For':'172.30.32.2'}))
+    raise AssertionError('Ingress accepted an untrusted peer')
+except urllib.error.HTTPError as e: assert e.code==403'''
+    docker('exec', name, 'python', '-c', reject)
+
 with tempfile.TemporaryDirectory(prefix='split-ha-test-') as folder:
     data = Path(folder)
-    (data / 'options.json').write_text(json.dumps({'allow_http': True, 'initial_setup_code': 'legacy!invalid'}))
+    (data / 'options.json').write_text(json.dumps({'allow_http': True, 'initial_setup_code': 'legacy!invalid', 'mfa_required': False}))
     # Match Supervisor's readable volume root; only instance/backups are privately owned.
     data.chmod(0o755)
     try:
+        docker('network', 'create', '--internal', '--subnet', '172.30.32.0/24', '--gateway', '172.30.32.1', network)
         start(data)
         assert request('/api/meta')['setup_required']
         status = docker('exec', name, 'python', '-c', "print(open('/proc/1/status').read())")
@@ -73,9 +121,11 @@ with tempfile.TemporaryDirectory(prefix='split-ha-test-') as folder:
         request('/api/setup/complete', {'username': 'ha-smoke', 'display_name': 'Demo', 'password': secrets.token_urlsafe(24)},
                 {'Content-Type': 'application/json', 'X-Setup-Token': code}, expected_status=403)
         code = renewed
-        request('/api/setup/complete', {'username': 'ha-smoke', 'display_name': 'Demo', 'password': secrets.token_urlsafe(24)},
+        password = secrets.token_urlsafe(24)
+        request('/api/setup/complete', {'username': 'ha-smoke', 'display_name': 'Demo', 'password': password},
                 {'Content-Type': 'application/json', 'X-Setup-Token': code})
         assert not request('/api/meta')['setup_required']
+        ingress_checks(password)
         check = "import hashlib; print(hashlib.sha256(open('/data/instance/secret.key','rb').read()).hexdigest())"
         digest = docker('exec', name, 'python', '-c', check)
         archive = docker('exec', name, 'python', '/app/homeassistant.py',
@@ -105,5 +155,6 @@ with tempfile.TemporaryDirectory(prefix='split-ha-test-') as folder:
         print('PASS: Home Assistant options, non-root server, private data, setup, backup, recreation and offline restore.')
     finally:
         stop()
+        subprocess.run(['docker', 'network', 'rm', network], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         docker('run', '--rm', '--network', 'none', '--user', '0', '--entrypoint', 'chmod',
                '--mount', f'type=bind,src={data},dst=/folder', args.image, '-R', 'a+rwX', '/folder')

@@ -1,3 +1,4 @@
+import { isIngress } from "../utils/basePath";
 import { t, translateMessage } from "../i18n";
 import { useLanguage } from "../i18n/react";
 import { useRegisterSW } from "virtual:pwa-register/react";
@@ -9,6 +10,9 @@ interface InstallEvent extends Event {
   userChoice: Promise<{ outcome: string }>;
 }
 export function Pwa() {
+  return isIngress() ? null : <DirectPwa />;
+}
+function DirectPwa() {
   useLanguage();
   const [registration, setRegistration] =
     useState<ServiceWorkerRegistration | null>(null);

@@ -12,7 +12,7 @@ class HomeAssistantVersionTests(unittest.TestCase):
     def test_published_app_version_is_newer_than_both_legacy_packages(self):
         manifest = (ROOT / 'homeassistant/splitcompanion/config.yaml').read_text()
         current = re.search(r'^version: "([^"]+)"$', manifest, re.MULTILINE).group(1)
-        for installed in ('1.2.0-rc.5-homeassistant', '1.2.0-rc.6-homeassistant'):
+        for installed in ('1.2.0-rc.5-homeassistant', '1.2.0-rc.6-homeassistant', '1.2.1-rc.1'):
             with self.subTest(installed=installed):
                 self.assertGreater(AwesomeVersion(current), AwesomeVersion(installed))
 

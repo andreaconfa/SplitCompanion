@@ -1,5 +1,5 @@
 name: Split Companion
-version: "1.2.1-rc.1"
+version: "1.2.1-rc.2"
 slug: splitcompanion
 description: Private shared expenses, subscriptions and balances with a web app and PWA.
 url: https://github.com/andreaconfa/SplitCompanion
@@ -16,7 +16,11 @@ ports:
   8000/tcp: 8000
 ports_description:
   8000/tcp: HTTP web app and API; use an external HTTPS proxy for PWA or Internet access.
-webui: http://[HOST]:[PORT:8000]
+ingress: true
+ingress_port: 8099
+ingress_stream: true
+panel_icon: mdi:account-cash
+panel_title: Split Companion
 watchdog: http://[HOST]:[PORT:8000]/api/ready
 backup: cold
 options:

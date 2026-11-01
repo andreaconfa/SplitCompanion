@@ -1,3 +1,4 @@
+import { appURL } from "../utils/basePath";
 import { t } from "../i18n";
 import { LanguageSelector, useLanguage } from "../i18n/react";
 import { AvatarEditor } from "../components/AvatarEditor";
@@ -115,7 +116,7 @@ export default function Profile() {
       <Section title={t("Informazioni")}>
         <div className="settings-group">
           <div className="settings-row settings-version"><strong>{t("Versione")}</strong><span>{meta.data?.server_version ?? "—"}</span></div>
-          {meta.data?.source_available && <a className="settings-row" href="/api/source"><strong>{t("Codice sorgente · AGPL-3.0")}</strong><ChevronRight size={18} /></a>}
+          {meta.data?.source_available && <a className="settings-row" href={appURL("/api/source")}><strong>{t("Codice sorgente · AGPL-3.0")}</strong><ChevronRight size={18} /></a>}
           <div className="settings-about"><strong>Split Companion</strong><p>{t("Il tuo server, le tue spese.")}</p><p>{t("Accesso protetto. I tuoi dati restano sulla vostra installazione.")}</p></div>
         </div>
       </Section>

@@ -1,3 +1,4 @@
+import { appURL } from "./utils/basePath";
 import { t, translateMessage } from "./i18n";
 import { LanguageObserver, LanguageSelector, useLanguage } from "./i18n/react";
 import { lazy, Suspense, useState, useEffect, type FormEvent } from "react";
@@ -162,7 +163,7 @@ function Layout({ session }: { session: Session }) {
     <DataContext.Provider
       value={{ users: users.data ?? [], groups: groups.data ?? [] }}
     >
-      <a className="skip-link" href="#main-content">{t("Vai al contenuto")}</a>
+      <a className="skip-link" href={appURL(location.pathname + location.search + "#main-content")}>{t("Vai al contenuto")}</a>
       <div className="app-main">
         <header className="app-topbar">
           <Brand />

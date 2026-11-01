@@ -1,3 +1,4 @@
+import { appURL } from "../utils/basePath";
 import { getLanguage, t } from "../i18n";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { configureTimezone } from "../utils/money";
@@ -30,7 +31,7 @@ export async function api<T>(
   if (method !== "GET") headers.set("X-CSRF-Token", csrf);
   let response: Response;
   try {
-    response = await fetch("/api" + path, {
+    response = await fetch(appURL("/api" + path), {
       ...options,
       method,
       headers,

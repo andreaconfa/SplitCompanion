@@ -1,5 +1,7 @@
 """Home Assistant adapter: read managed options, drop privileges, use normal startup."""
 import json
+from contextlib import contextmanager
+import socket
 import os
 from pathlib import Path
 import secrets
@@ -55,6 +57,24 @@ def authorize_setup(engine):
         return code
 
 
+@contextmanager
+def listener_sockets(host, port, ingress_port=8099):
+    """One Uvicorn process/lifespan owns both ports and closes them together."""
+    listeners = []
+    try:
+        for number in (port, ingress_port):
+            listener = socket.socket(socket.AF_INET6 if ':' in host else socket.AF_INET, socket.SOCK_STREAM)
+            listeners.append(listener)
+            listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            listener.bind((host, number))
+            listener.listen(2048)
+            listener.setblocking(False)
+        yield listeners
+    finally:
+        for listener in listeners:
+            listener.close()
+
+
 def main():
     os.umask(0o077)
     options = json.loads(Path('/data/options.json').read_text())
@@ -91,8 +111,15 @@ def main():
                   'Codes are no longer generated after setup is completed.', flush=True)
         del code, options
         import uvicorn
-        uvicorn.run('app.main:app', host=cfg.host, port=cfg.port, workers=1,
-                    proxy_headers=True, forwarded_allow_ips=cfg.trusted_proxy_ips, access_log=False)
+        from app.main import app
+        from app.ingress import HomeAssistantApp
+        # Proxy processing happens only after dispatch by the actual local socket.
+        server = uvicorn.Server(uvicorn.Config(
+            HomeAssistantApp(app, cfg.trusted_proxy_ips), proxy_headers=False,
+            access_log=False, workers=1,
+        ))
+        with listener_sockets(cfg.host, cfg.port) as sockets:
+            server.run(sockets=sockets)
 
 
 if __name__ == '__main__':

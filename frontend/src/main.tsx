@@ -1,3 +1,4 @@
+import { appBasePath } from "./utils/basePath";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
@@ -12,7 +13,7 @@ const client = new QueryClient({
     mutations: { retry: false, networkMode: "always" },
   },
 });
-const router = createBrowserRouter([{ path: "*", element: <App /> }]);
+const router = createBrowserRouter([{ path: "*", element: <App /> }], { basename: appBasePath() });
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={client}>

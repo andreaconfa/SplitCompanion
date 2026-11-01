@@ -1,3 +1,4 @@
+import { appURL } from "./basePath";
 import { t } from "../i18n";
 export type PeopleDisplay = "both" | "name" | "photo";
 export const PEOPLE_DISPLAY_KEY = "split.peopleDisplay";
@@ -17,7 +18,7 @@ export function initials(name: string) {
   return name.trim().split(/\s+/).filter(Boolean).slice(0, 2).map(part => Array.from(part)[0]).join("").toLocaleUpperCase() || "?";
 }
 export function avatarURL(id: number, version?: string | null) {
-  return version ? `/api/users/${id}/avatar?v=${encodeURIComponent(version)}` : null;
+  return version ? appURL(`/api/users/${id}/avatar?v=${encodeURIComponent(version)}`) : null;
 }
 export function avatarFileError(file: { size: number; type: string }) {
   if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) return t("Scegli una foto PNG, JPEG o WebP.");

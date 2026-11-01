@@ -1,3 +1,4 @@
+import { isIngress } from "../utils/basePath";
 import { t, translateMessage } from "../i18n";
 import { useLanguage } from "../i18n/react";
 import { useEffect, useState } from 'react';
@@ -7,6 +8,9 @@ import { Button, ErrorBox, Section } from './ui';
 import { applicationKey, pushSupport } from '../utils/push';
 
 export function PushSettings() {
+  return isIngress() ? null : <DirectPushSettings />;
+}
+function DirectPushSettings() {
   const language = useLanguage();
   const available = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
   const [permission, setPermission] = useState<NotificationPermission>(available ? Notification.permission : 'default');

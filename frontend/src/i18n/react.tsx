@@ -1,3 +1,4 @@
+import { appURL } from "../utils/basePath";
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getLanguage, setLanguage, subscribeLanguage, t } from './index';
@@ -11,7 +12,7 @@ export function LanguageObserver() {
   useEffect(() => {
     document.documentElement.lang = language;
     document.querySelector('meta[name="description"]')?.setAttribute('content', t('Spese condivise, conti sereni.'));
-    document.querySelector('link[rel="manifest"]')?.setAttribute("href", language === "it" ? "/manifest-it.webmanifest" : "/manifest.webmanifest");
+    document.querySelector('link[rel="manifest"]')?.setAttribute("href", appURL(language === "it" ? "/manifest-it.webmanifest" : "/manifest.webmanifest"));
     if (previousLanguage.current !== language) {
       previousLanguage.current = language;
       // A pending response in the old language must not overwrite the new labels.

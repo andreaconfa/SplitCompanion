@@ -38,8 +38,8 @@ Repository visibility and package visibility are separate settings.
 ## Manual build and attachments
 
 ```sh
-docker build --platform linux/amd64 -t splitcompanion:1.2.1-rc.1 .
-docker save -o splitcompanion-amd64.tar splitcompanion:1.2.1-rc.1
+docker build --platform linux/amd64 -t splitcompanion:1.2.1-rc.2 .
+docker save -o splitcompanion-amd64.tar splitcompanion:1.2.1-rc.2
 python3 scripts/make-source-archive.py --output splitcompanion-source.tar.gz
 sha256sum splitcompanion-amd64.tar splitcompanion-source.tar.gz > SHA256SUMS
 ```

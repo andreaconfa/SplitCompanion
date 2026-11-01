@@ -3,11 +3,13 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 export default defineConfig({
+  base: "./",
   plugins: [
     react(),
     tailwindcss(),
     VitePWA({
       registerType: "prompt",
+      injectRegister: false,
       includeAssets: ["icon-192.png", "icon-512.png", "icon.svg", "theme.js", "manifest-it.webmanifest"],
       manifest: {
         name: "Split Companion",

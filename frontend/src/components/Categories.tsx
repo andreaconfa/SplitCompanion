@@ -1,3 +1,4 @@
+import { appURL } from "../utils/basePath";
 import { t } from "../i18n";
 import { useLanguage } from "../i18n/react";
 import { useState } from "react";
@@ -78,7 +79,7 @@ export function CategoryIcon({
     return (
       <img
         className="category-image chatgpt-icon"
-        src="/chatgpt.svg"
+        src={appURL("/chatgpt.svg")}
         width={size}
         height={size}
         alt="ChatGPT"
@@ -88,7 +89,7 @@ export function CategoryIcon({
     return (
       <img
         className="category-image"
-        src={`/api/icons/${iconKey.slice(7)}/image`}
+        src={appURL(`/api/icons/${iconKey.slice(7)}/image`)}
         width={size}
         height={size}
         alt={t("Icona personalizzata")}

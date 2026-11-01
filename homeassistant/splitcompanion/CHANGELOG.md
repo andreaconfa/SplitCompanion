@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.1-rc.2
+
+- Add Home Assistant Ingress and the native **Show in sidebar** toggle.
+- Open Split Companion inside Home Assistant while keeping its own login and MFA.
+- Keep direct port 8000 available for the standalone web app, PWA and native clients.
+- Isolate Ingress sessions and accept Ingress traffic only from Supervisor.
+- Disable PWA installation and web push controls inside the embedded panel; use the direct HTTPS address for those features.
+
 ## 1.2.1-rc.1
 
 - Fix the disabled Update button: use a version Home Assistant correctly orders

@@ -6,7 +6,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
 from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError
 from sqlalchemy import text
@@ -114,7 +114,8 @@ async def protections(request: Request, call_next):
 
 
 async def protected_response(request: Request, call_next):
-    public_origin = get_settings().public_origin
+    ingress = request.scope.get("split_ingress")
+    public_origin = "" if ingress else get_settings().public_origin
     if public_origin and request.url.path not in ("/api/health", "/api/ready"):
         if request.url.scheme != "https":
             return JSONResponse(
@@ -167,10 +168,15 @@ async def protected_response(request: Request, call_next):
         response.headers["Cache-Control"] = "no-store"
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["Referrer-Policy"] = "same-origin"
-    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN" if ingress else "DENY"
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; worker-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
     )
+    if ingress:
+        response.headers["Content-Security-Policy"] = response.headers[
+            "Content-Security-Policy"
+        ].replace("frame-ancestors 'none'", "frame-ancestors 'self'")
+        response.headers["Cache-Control"] = "no-store"
     return response
 
 
@@ -327,20 +333,26 @@ app.include_router(settings_router)
 
 
 @app.get("/{path:path}", include_in_schema=False)
-def spa(path: str):
+def spa(path: str, request: Request):
     if path == "api" or path.startswith("api/"):
         raise HTTPException(404, "Endpoint non trovato.")
     root = Path(get_settings().frontend_dir).resolve()
     target = (root / path).resolve()
     if not target.is_relative_to(root):
         raise HTTPException(404, "File non trovato.")
-    if target.is_file():
+    if target.is_file() and path != "index.html":
         return FileResponse(target)
-    if Path(path).suffix:
+    if Path(path).suffix and path != "index.html":
         raise HTTPException(404, "File non trovato.")
     index = root / "index.html"
     if not index.is_file():
         raise HTTPException(
             503, "Interfaccia non compilata. Esegui npm run build nella directory frontend."
         )
+    if prefix := request.scope.get("split_ingress"):
+        content = index.read_text().replace(
+            '<base href="/" />',
+            f'<base href="{prefix}/" /><meta name="split-ingress" content="true">',
+        )
+        return HTMLResponse(content, headers={"Cache-Control": "no-store"})
     return FileResponse(index, headers={"Cache-Control": "no-cache"})
