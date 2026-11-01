@@ -12,8 +12,6 @@ git clone --branch v1.2.0-rc.4 --single-branch https://github.com/andreaconfa/Sp
 cd SplitCompanion
 ```
 
-While the repository is private, access requires permission from its owner.
-
 ## Build the container on Linux
 
 From the source directory:

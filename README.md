@@ -13,11 +13,6 @@ friends and small private groups, with a consistent interface across devices.
 
 **[Installation guide](wiki/Installation.md)** · **[Documentation](wiki/Home.md)** · **[Roadmap](ROADMAP.md)** · **[Security](SECURITY.md)**
 
-> **Release candidate 1.2.0-rc.4 — private preview.** Repository and package access
-> require authorization until public launch. The release workflow builds
-> `ghcr.io/andreaconfa/splitcompanion:1.2.0-rc.4`; use it after the workflow succeeds.
-> Find checksums, image digest and source in the [release](https://github.com/andreaconfa/SplitCompanion/releases/tag/v1.2.0-rc.4).
-
 ## One app, across your devices
 
 ### Web app
@@ -87,8 +82,7 @@ You need Docker Engine with the Compose plugin and a local disk on a Linux serve
    ```
 
 3. The example selects `ghcr.io/andreaconfa/splitcompanion:1.2.0-rc.4`. You can pin
-   the digest from the release instead. During the private preview, authenticate
-   Docker to GHCR with an account granted package access ([GitHub instructions](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-to-the-container-registry)).
+   the digest from the release instead.
    Alternatively, [build from source](docs/native.md).
 4. Start the application and generate the initial setup code:
 
