@@ -34,14 +34,19 @@ HTTPS is required for the full PWA experience. [PWA setup](docs/pwa.md).
   <img src="docs/images/pwa-subscriptions.png" width="280" alt="PWA shared subscriptions with Indigo accent">
 </p>
 
-### Native iOS app — awaiting Apple review
+### Native iOS app — App Store release in preparation
 
 The native SwiftUI companion connects to the same self-hosted backend as the web
 app. App Store availability will be announced after Apple approval; there is no
 public App Store download yet.
 
+[App overview](https://holtermate.it/splitcompanion/) ·
+[Support](https://holtermate.it/splitcompanion/support.html) ·
+[Privacy policy](https://holtermate.it/splitcompanion/privacy.html)
+
 - Adaptive layouts for standard iPhones and **iPhone Duo**, closed or open.
 - Multiple server profiles, shared expenses, subscriptions, credits and statistics.
+- An offline demo to explore the native interface without a server or account. Demo changes are temporary; widgets, Watch and reminders require a real server.
 - **Home Screen and Lock Screen widgets** for a quick look at your balances and upcoming payments.
 - A **mini companion app for Apple Watch**, with balances, recent expenses and upcoming payments.
 - **Watch face complications** for information at a glance.
