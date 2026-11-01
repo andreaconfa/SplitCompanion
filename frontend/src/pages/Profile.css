@@ -1,0 +1,92 @@
+.profile-settings {
+  max-width: 820px;
+  margin-inline: auto;
+}
+.profile-settings > .section,
+.profile-settings .settings-notifications > .section {
+  margin-top: 28px;
+}
+.profile-settings > .section > .section-head,
+.profile-settings .settings-notifications > .section > .section-head {
+  margin: 0 18px 9px;
+}
+.profile-settings > .section > .section-head h2,
+.profile-settings .settings-notifications > .section > .section-head h2 {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+}
+.profile-settings .settings-group,
+.profile-settings .settings-notifications .card {
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--paper);
+  overflow: hidden;
+  box-shadow: none;
+}
+.profile-settings .settings-identity { padding: 22px 20px; }
+.profile-settings .settings-identity h2 { font-size: 20px; }
+.profile-settings .settings-identity-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.profile-settings .settings-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 74px;
+  padding: 16px 20px;
+  color: var(--ink);
+  text-decoration: none;
+  list-style: none;
+}
+.profile-settings .settings-row::-webkit-details-marker { display: none; }
+.profile-settings a.settings-row,
+.profile-settings summary.settings-row { cursor: pointer; }
+.profile-settings a.settings-row:hover,
+.profile-settings summary.settings-row:hover { background: var(--surface); }
+.profile-settings .settings-group > * + *,
+.profile-settings .settings-disclosure + .settings-row {
+  border-top: 1px solid var(--line);
+}
+.profile-settings .settings-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  height: 34px;
+  color: var(--accent-text);
+  background: var(--surface);
+  border-radius: 10px;
+}
+.profile-settings .settings-row-main { display: grid; flex: 1; min-width: 0; gap: 4px; }
+.profile-settings .settings-row-main strong { font-size: 15px; font-weight: 600; }
+.profile-settings .settings-row-main > span,
+.profile-settings .settings-version > span { color: var(--muted); font-size: 13px; }
+.profile-settings .settings-chevron { flex-shrink: 0; color: var(--muted); }
+.profile-settings details[open] > summary .settings-chevron { transform: rotate(90deg); }
+.profile-settings .settings-detail { padding: 4px 20px 20px; }
+.profile-settings .settings-security > .section { margin-top: 18px; }
+.profile-settings .settings-security > .section > .section-head h2 { font-size: 14px; color: var(--muted); }
+.profile-settings .settings-security > .section > .card { border: 0; padding: 0; box-shadow: none; border-radius: 0; }
+.profile-settings .settings-preference { padding: 20px; }
+.profile-settings .settings-preference fieldset { margin: 0; min-width: 0; }
+.profile-settings .settings-preference legend { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+.profile-settings .settings-footnote { margin: 9px 18px 0; color: var(--muted); font-size: 12px; }
+.profile-settings .settings-notifications .card { padding: 20px; }
+.profile-settings .settings-version { min-height: 58px; justify-content: space-between; font-size: 15px; }
+.profile-settings .settings-about { padding: 18px 20px; font-size: 13px; }
+.profile-settings .settings-about p { color: var(--muted); margin: 6px 0 0; line-height: 1.5; }
+.profile-settings .settings-session { margin-top: 24px; }
+.profile-settings .settings-session > .btn { width: 100%; min-height: 54px; border-radius: 20px; color: var(--negative); background: var(--paper); border-color: var(--line); }
+@media (max-width: 480px) {
+  .profile-settings .settings-row { padding-inline: 16px; gap: 10px; }
+  .profile-settings .settings-preference,
+  .profile-settings .settings-notifications .card { padding: 18px 16px; }
+  .profile-settings .settings-row-main > span { line-height: 1.4; }
+}

@@ -1,0 +1,110 @@
+name: Publish approved release
+on:
+  release:
+    types: [published]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -r backend/requirements-dev.lock && python -m pytest backend/tests -q
+      - run: python -m ruff check backend/app backend/tests
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund && npm test && npm run build
+        working-directory: frontend
+      - run: docker run --rm -v "$PWD:/repo:ro" ghcr.io/gitleaks/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f git /repo --log-opts=--all --redact
+  image:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: Validate version and image name
+        id: names
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          python3 - <<'PY'
+          import os,re
+          from pathlib import Path
+          tag=os.environ['RELEASE_TAG']
+          if not re.fullmatch(r'v\d+\.\d+\.\d+(?:-rc\.\d+)?',tag): raise SystemExit('Invalid release tag')
+          namespace={};exec(Path('backend/app/version.py').read_text(),namespace)
+          if namespace['SERVER_VERSION']!=tag[1:]: raise SystemExit('Tag/version mismatch')
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
+              f.write('image=ghcr.io/'+os.environ['REPOSITORY'].lower()+'\nversion='+tag[1:]+'\n')
+          PY
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/${{ matrix.arch }}
+          load: true
+          push: false
+          tags: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}-${{ matrix.arch }}
+      - run: python3 scripts/container-smoke.py --image "$IMAGE"
+        env:
+          IMAGE: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}-${{ matrix.arch }}
+      - uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}-${{ matrix.arch }}
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - run: docker push "$IMAGE"
+        env:
+          IMAGE: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}-${{ matrix.arch }}
+  manifest:
+    needs: image
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish multi-architecture manifest and corresponding source
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          REPOSITORY: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          image="ghcr.io/${REPOSITORY,,}"
+          version="${RELEASE_TAG#v}"
+          docker buildx imagetools create -t "$image:$version" "$image:$version-amd64" "$image:$version-arm64"
+          docker buildx imagetools inspect "$image:$version" > image-digests.txt
+          python3 scripts/make-source-archive.py --output splitcompanion-source.tar.gz
+          sha256sum splitcompanion-source.tar.gz > SHA256SUMS
+          gh release upload "$RELEASE_TAG" splitcompanion-source.tar.gz SHA256SUMS image-digests.txt compose.yaml .env.example

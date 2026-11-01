@@ -1,0 +1,14 @@
+{
+  "groups": [{"id": 42, "name": "Casa"}],
+  "expenses": [
+    {"id": 1001, "group_id": 42, "description": "Cena", "cost": "60.00", "currency_code": "EUR", "date": "2025-01-05T00:00:00Z", "payment": false,
+     "users": [
+       {"user": {"id": 1, "first_name": "Alex", "last_name": "Rossi"}, "paid_share": "60.00", "owed_share": "20.00"},
+       {"user": {"id": 2, "first_name": "Laura", "last_name": "Verdi"}, "paid_share": "0.00", "owed_share": "20.00"},
+       {"user": {"id": 3, "first_name": "Marco", "last_name": "Bianchi"}, "paid_share": "0.00", "owed_share": "20.00"}]},
+    {"id": 1002, "group_id": 42, "description": "Laura rimborsa Alex", "cost": "10.00", "currency_code": "EUR", "date": "2025-01-06T00:00:00Z", "payment": true,
+     "users": [
+       {"user": {"id": 1, "first_name": "Alex", "last_name": "Rossi"}, "paid_share": "0.00", "owed_share": "10.00"},
+       {"user": {"id": 2, "first_name": "Laura", "last_name": "Verdi"}, "paid_share": "10.00", "owed_share": "0.00"}]}
+  ]
+}

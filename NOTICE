@@ -1,0 +1,21 @@
+Split Companion — server and web application
+Copyright (C) 2026 Split Companion contributors
+SPDX-License-Identifier: AGPL-3.0-only
+
+This distribution contains the server and web/PWA source only.
+The native iOS application is a separate work and is not included here.
+
+The GNU Affero General Public License version 3 applies to this project's
+original code. Third-party packages retain their respective licenses.
+Dependency versions are listed in backend/requirements*.lock and
+frontend/package-lock.json. Distribution of modified versions must retain
+applicable third-party notices and provide corresponding source as required.
+
+The source archive at /api/source in official container builds contains the
+source used to build that image, including build instructions. If you modify
+the application, rebuild the image so that its source archive matches it.
+
+Splitwise, OpenAI and other product names are trademarks of their owners.
+Split Companion is independent and is not affiliated with or endorsed by them.
+The import feature processes files supplied by users; it does not connect to
+Splitwise accounts or use private Splitwise APIs.

@@ -1,0 +1,44 @@
+name: splitcompanion
+services:
+  app:
+    image: ${SPLIT_COMPANION_IMAGE:-splitcompanion:1.2.0-rc.1}
+    restart: unless-stopped
+    init: true
+    user: "10001:10001"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m,mode=1777
+    environment:
+      SPLIT_COMPANION_DB: /data/split-companion.db
+      SPLIT_COMPANION_BACKUP_DIR: /backups
+      SPLIT_COMPANION_BACKUPS_ENABLED: "true"
+      SPLIT_COMPANION_BACKUP_HOUR: "${SPLIT_COMPANION_BACKUP_HOUR:-3}"
+      SPLIT_COMPANION_BACKUP_RETENTION: "${SPLIT_COMPANION_BACKUP_RETENTION:-14}"
+      SPLIT_COMPANION_TIMEZONE: "${SPLIT_COMPANION_TIMEZONE:-UTC}"
+      SPLIT_COMPANION_MFA_REQUIRED: "${SPLIT_COMPANION_MFA_REQUIRED:-true}"
+      SPLIT_COMPANION_ALLOW_HTTP: "${SPLIT_COMPANION_ALLOW_HTTP:-true}"
+      SPLIT_COMPANION_PUBLIC_ORIGIN: "${SPLIT_COMPANION_PUBLIC_ORIGIN:-}"
+      SPLIT_COMPANION_TRUSTED_PROXY_IPS: "${SPLIT_COMPANION_TRUSTED_PROXY_IPS:-}"
+      SPLIT_COMPANION_PUSH_ENABLED: "${SPLIT_COMPANION_PUSH_ENABLED:-false}"
+      SPLIT_COMPANION_PUSH_VAPID_SUBJECT: "${SPLIT_COMPANION_PUSH_VAPID_SUBJECT:-}"
+    ports:
+      - "${SPLIT_COMPANION_BIND:-127.0.0.1}:${SPLIT_COMPANION_PORT:-8000}:8000"
+    volumes:
+      - type: bind
+        source: ${SPLIT_COMPANION_DATA_DIR:-./data}
+        target: /data
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${SPLIT_COMPANION_BACKUP_DIR:-./backups}
+        target: /backups
+        bind:
+          create_host_path: false
+    stop_grace_period: 120s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
