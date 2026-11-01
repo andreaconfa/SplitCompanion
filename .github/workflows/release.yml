@@ -99,5 +99,6 @@ jobs:
           set -euo pipefail
           docker buildx imagetools inspect "$IMAGE" > image-digests.txt
           python3 scripts/make-source-archive.py --output splitcompanion-source.tar.gz
-          sha256sum splitcompanion-source.tar.gz image-digests.txt security-scan.json compose.yaml .env.example > SHA256SUMS
-          gh release upload "$RELEASE_TAG" splitcompanion-source.tar.gz SHA256SUMS image-digests.txt security-scan.json compose.yaml .env.example
+          cp .env.example env.example
+          sha256sum splitcompanion-source.tar.gz image-digests.txt security-scan.json compose.yaml env.example > SHA256SUMS
+          gh release upload "$RELEASE_TAG" splitcompanion-source.tar.gz SHA256SUMS image-digests.txt security-scan.json compose.yaml env.example

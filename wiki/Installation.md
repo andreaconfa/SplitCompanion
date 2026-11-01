@@ -7,11 +7,11 @@ A single application container, with persistent data on your Linux host.
 You need Docker Engine with the Compose plugin and a local disk on a Linux server
 (amd64 / x86-64, Intel or AMD). Run **one replica and one worker**. Do not put SQLite on NFS or SMB.
 
-1. Download `compose.yaml` and `.env.example` from the [same release](https://github.com/andreaconfa/SplitCompanion/releases/tag/v1.2.0-rc.4).
+1. Download `compose.yaml` and `env.example` from the [same release](https://github.com/andreaconfa/SplitCompanion/releases/tag/v1.2.0-rc.4).
 2. Prepare the configuration and persistent directories:
 
    ```sh
-   cp .env.example .env
+   cp env.example .env
    sudo install -d -m 0700 -o 10001 -g 10001 data backups
    ```
 

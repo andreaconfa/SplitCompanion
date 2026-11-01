@@ -19,7 +19,10 @@ private tags, inspect refs/remotes and push only the intended branch.
    The workflow accepts `vX.Y.Z` or `vX.Y.Z-rc.N` and rejects tag/version mismatches.
 5. Publish a GitHub release on the verified commit. `release.yml` tests and scans
    the build, starts the Linux amd64 image and publishes its version tag at `ghcr.io/<owner>/<repository>:<version>`.
-6. Check that the package is public and test an anonymous pull from a clean host.
+6. Release attachments use `env.example` for the configuration template; copy it
+   to `.env` when installing. The source tree keeps `.env.example`. GitHub rewrites
+   attachment names that start with a dot, so checksums must use the attachment name.
+7. Check that the package is public and test an anonymous pull from a clean host.
    Put the exact image name and digest in release notes and examples. Never
    overwrite versions already delivered to users.
 
