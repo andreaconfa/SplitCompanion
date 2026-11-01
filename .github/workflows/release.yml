@@ -67,6 +67,7 @@ jobs:
           IMAGE: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}
       - uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.33.1
         with:
+          version: v0.76.1
           image-ref: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}
           exit-code: '1'
           ignore-unfixed: true
@@ -74,6 +75,7 @@ jobs:
       - name: Record remaining high and critical findings
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.33.1
         with:
+          version: v0.76.1
           image-ref: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}
           format: json
           output: security-scan.json
