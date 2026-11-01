@@ -27,3 +27,14 @@ it('keeps password correction in the authenticated form after a rejected current
   await expect(api('/auth/password', {method:'POST',body:JSON.stringify({current_password:'wrong',new_password:'new-password'})})).rejects.toThrow('Password attuale non corretta');
   expect(dispatchEvent).not.toHaveBeenCalled();
 });
+it('sends the selected UI language for every API request', async () => {
+  const { setLanguage } = await import('../i18n');
+  const fetcher = vi.fn().mockImplementation(() => Promise.resolve(new Response('{}')));
+  vi.stubGlobal('fetch', fetcher);
+  setLanguage('it');
+  await api('/meta');
+  expect(fetcher.mock.calls[0][1].headers.get('Accept-Language')).toBe('it');
+  setLanguage('en');
+  await api('/groups', { method: 'POST', body: '{}' });
+  expect(fetcher.mock.calls[1][1].headers.get('Accept-Language')).toBe('en');
+});

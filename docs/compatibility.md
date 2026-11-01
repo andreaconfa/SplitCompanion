@@ -20,3 +20,16 @@ replace authentication, authorization or server-side input validation.
 The native iOS companion checks compatibility and explains whether to update the
 app, update the server, retry or change servers. Its source is not part of this
 server/web distribution.
+
+## Localization and currency defaults
+
+Clients may send `Accept-Language: en` or `it`; English is the fallback. API fields,
+status codes and stored user content are unchanged. `/api/meta` and authenticated
+session responses also expose `default_currency`, `supported_currencies` and
+`supported_languages`. Older clients may ignore these additive fields.
+
+Administrators read or change `/api/admin/settings`; writes require the existing
+authentication and CSRF protections. An omitted currency on a new record uses the
+server default. Explicit currency values and existing records retain their meaning.
+Web push subscriptions may include `language` (`en` or `it`); otherwise the request
+language is used. Clients should refresh the subscription after a language change.

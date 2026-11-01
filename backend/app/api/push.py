@@ -1,3 +1,5 @@
+from typing import Literal
+from app.i18n import language_from_header
 import base64
 import secrets
 from datetime import timedelta
@@ -19,6 +21,7 @@ class Endpoint(BaseModel):
 
 class SubscriptionInput(Endpoint):
     keys: dict[str, str]
+    language: Literal["en", "it"] | None = None
 
     @field_validator("keys")
     @classmethod
@@ -87,6 +90,9 @@ def subscribe(
         )
     device.p256dh, device.auth = data.keys["p256dh"], data.keys["auth"]
     device.session_hash = request.state.auth.token_hash
+    device.language = data.language or language_from_header(
+        request.headers.get("accept-language", "")
+    )
     s.add(device)
     s.flush()
     response.set_cookie(

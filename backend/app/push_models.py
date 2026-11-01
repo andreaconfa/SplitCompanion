@@ -13,6 +13,7 @@ class PushDevice(Record, table=True):
     p256dh: str
     auth: str
     session_hash: str
+    language: str = "en"
 
 
 class PushOutbox(Record, table=True):

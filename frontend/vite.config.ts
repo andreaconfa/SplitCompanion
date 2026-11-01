@@ -8,12 +8,12 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "prompt",
-      includeAssets: ["icon-192.png", "icon-512.png", "icon.svg", "theme.js"],
+      includeAssets: ["icon-192.png", "icon-512.png", "icon.svg", "theme.js", "manifest-it.webmanifest"],
       manifest: {
         name: "Split Companion",
         short_name: "Split",
-        description: "Spese condivise, conti sereni.",
-        lang: "it",
+        description: "Shared expenses, peace of mind.",
+        lang: "en",
         start_url: "/",
         scope: "/",
         display: "standalone",

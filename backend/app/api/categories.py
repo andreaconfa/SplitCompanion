@@ -7,7 +7,7 @@ from app.auth import DB, CurrentUser, Admin
 from app.models import Category, CustomIcon, Expense, Subscription, LegacyTransaction
 from app.schemas import Input, Name, CategoryInput
 from app.services.access import get_or_404, group_access
-from app.services.category_service import validate_icon, validate_metadata, ICONS
+from app.services.category_service import validate_icon, validate_metadata, ICONS, category_response
 
 router = APIRouter(prefix="/api")
 
@@ -19,7 +19,9 @@ class CategoryWrite(Input):
 
 @router.get("/categories")
 def categories(user: CurrentUser, s: DB):
-    return s.exec(select(Category).order_by(Category.name)).all()
+    return [
+        category_response(row) for row in s.exec(select(Category).order_by(Category.name)).all()
+    ]
 
 
 @router.post("/categories", status_code=201)
@@ -28,7 +30,7 @@ def create_category(data: CategoryWrite, user: Admin, s: DB):
     row = Category(**data.model_dump(), created_by_user_id=user.id)
     s.add(row)
     s.flush()
-    return row
+    return category_response(row)
 
 
 @router.patch("/categories/{id}")
@@ -37,7 +39,7 @@ def update_category(id: int, data: CategoryWrite, user: Admin, s: DB):
     validate_icon(s, data.icon_key)
     row.name, row.icon_key = data.name, data.icon_key
     s.add(row)
-    return row
+    return category_response(row)
 
 
 @router.delete("/categories/{id}")

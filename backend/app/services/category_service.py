@@ -155,3 +155,38 @@ def classified_metadata(s, description, raw=None, pet_context=False):
         "icon_key": None,
         "category_source": "auto:" + reason if reason else None,
     }
+
+
+CATEGORY_EN = {
+    "groceries": "Groceries",
+    "dining": "Restaurants and bars",
+    "home": "Home",
+    "bills": "Utilities",
+    "transport": "Transport",
+    "travel": "Travel",
+    "health": "Health",
+    "pets": "Pets",
+    "entertainment": "Entertainment",
+    "shopping": "Shopping",
+    "software": "Software and AI",
+    "education": "Education",
+    "gifts": "Gifts",
+    "sport": "Sport",
+    "personal-care": "Personal care",
+    "electronics": "Electronics and accessories",
+    "chatgpt": "ChatGPT",
+    "transfers": "Transfers and refunds",
+}
+
+
+def category_display_name(category):
+    from app.i18n import language
+
+    original = next((name for slug, name, _ in PREDEFINED if slug == category.slug), None)
+    if language.get() == "en" and original is not None and category.name == original:
+        return CATEGORY_EN[category.slug]
+    return category.name
+
+
+def category_response(category):
+    return {**category.model_dump(), "display_name": category_display_name(category)}

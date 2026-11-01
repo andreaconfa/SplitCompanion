@@ -13,6 +13,7 @@ The application container includes server and web/PWA. HTTPS remains under your 
 
 ## Go further
 
+- [Home Assistant App](Home-Assistant.md)
 - [Build from source or run natively on Linux](Build-from-source.md)
 - [Security and Internet exposure](Security.md)
 - [Client compatibility](Compatibility.md)

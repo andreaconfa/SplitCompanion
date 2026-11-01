@@ -1,3 +1,5 @@
+import { t } from "../i18n";
+import { useLanguage } from "../i18n/react";
 import { useUnsavedChanges } from "../components/UnsavedChanges";
 import { Person } from "../components/Person";
 import { CategoryPicker } from "../components/Categories";
@@ -25,6 +27,7 @@ import {
   validCurrency,
 } from "../utils/money";
 export function ExpenseForm() {
+  useLanguage();
   const { id } = useParams();
   const query = useApi<Expense>("/expenses/" + id, !!id);
   return id ? (
@@ -36,6 +39,7 @@ export function ExpenseForm() {
   );
 }
 export function SubscriptionForm() {
+  useLanguage();
   const { id } = useParams();
   const query = useApi<Subscription>("/subscriptions/" + id, !!id);
   return id ? (
@@ -57,6 +61,7 @@ function Composer({
   subscription?: Subscription;
   recurring?: boolean;
 }) {
+  useLanguage();
   const existing = expense ?? subscription;
   const unsaved = useUnsavedChanges();
   const [category, setCategory] = useState<CategoryMetadata>({ category_id: existing?.category_id ?? null });
@@ -75,7 +80,7 @@ function Composer({
   const [amount, setAmount] = useState(
     existing ? decimal(existing.amount_cents) : "",
   );
-  const [currency, setCurrency] = useState(existing?.currency ?? "EUR");
+  const [currency, setCurrency] = useState(existing?.currency ?? session.default_currency ?? "EUR");
   const [payer, setPayer] = useState(
     existing?.paid_by_user_id ?? session.user.id,
   );
@@ -134,10 +139,10 @@ function Composer({
   let validation = "";
   try {
     parsed = cents(amount || "0");
-    preview = splitAmounts(parsed, mode, participants, values);
-    if (!parsed) validation = "Inserisci un importo maggiore di zero.";
+    preview = splitAmounts(parsed, mode, participants, values, currency);
+    if (!parsed) validation = t("Inserisci un importo maggiore di zero.");
     if (!validCurrency(currency))
-      validation = "Inserisci un codice valuta valido, per esempio EUR.";
+      validation = t("Inserisci un codice valuta valido, per esempio EUR.");
   } catch (e) {
     validation = (e as Error).message;
   }
@@ -190,11 +195,11 @@ function Composer({
       return;
     }
     if (!groupId || !payer || !description.trim()) {
-      setError("Completa gruppo, descrizione e pagante.");
+      setError(t("Completa gruppo, descrizione e pagante."));
       return;
     }
     if (recurring && (!/^\d+$/.test(interval) || Number(interval) < 1)) {
-      setError("La frequenza deve essere un numero intero positivo.");
+      setError(t("La frequenza deve essere un numero intero positivo."));
       return;
     }
     const splits = participants.map((id) =>
@@ -247,11 +252,8 @@ function Composer({
   if (expense?.source === "SPLITWISE")
     return (
       <div>
-        <PageHead title="Spesa importata" back={"/expenses/" + expense.id} />
-        <p className="notice">
-          Lo storico importato è conservato per garantire l’integrità del
-          rollback.
-        </p>
+        <PageHead title={t("Spesa importata")} back={"/expenses/" + expense.id} />
+        <p className="notice">{t("Lo storico importato è conservato per garantire l’integrità del rollback.")}</p>
       </div>
     );
   return (
@@ -259,15 +261,15 @@ function Composer({
       <PageHead
         eyebrow={
           recurring
-            ? "UNA COSA IN MENO A CUI PENSARE"
-            : "CONDIVIDI, SENZA PENSIERI"
+            ? t("UNA COSA IN MENO A CUI PENSARE")
+            : t("CONDIVIDI, SENZA PENSIERI")
         }
         title={
           existing
-            ? "Modifica " + (recurring ? "abbonamento" : "spesa")
+            ? recurring ? t("Modifica abbonamento") : t("Modifica spesa")
             : recurring
-              ? "Nuovo abbonamento"
-              : "Nuova spesa"
+              ? t("Nuovo abbonamento")
+              : t("Nuova spesa")
         }
         back={
           existing
@@ -279,21 +281,21 @@ function Composer({
         }
         description={
           recurring
-            ? "Le scadenze diventano spese, automaticamente. Una data iniziale passata genera subito i rinnovi trascorsi."
-            : "Un piccolo gesto, tutti i conti in ordine."
+            ? t("Le scadenze diventano spese, automaticamente. Una data iniziale passata genera subito i rinnovi trascorsi.")
+            : t("Un piccolo gesto, tutti i conti in ordine.")
         }
       />
       {unsaved.dialog}
       <form className="composer" onSubmit={submit} onChangeCapture={unsaved.markDirty} onClickCapture={event => { const target = event.target as HTMLElement; if (target.closest(".split-modes button")) unsaved.markDirty(); }}>
         <div className="card amount-card">
           <label htmlFor="amount">
-            {recurring ? "Importo a ogni scadenza" : "Quanto avete speso?"}
+            {recurring ? t("Importo a ogni scadenza") : t("Quanto avete speso?")}
           </label>
           <div className="amount-input">
             <input
               id="amount"
               inputMode="decimal"
-              placeholder="0,00"
+              placeholder={t("0,00")}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               required
@@ -302,9 +304,7 @@ function Composer({
             <span>{currency === "EUR" ? "€" : currency}</span>
           </div>
           <div className="two-fields">
-            <label>
-              Gruppo
-              <select
+            <label>{t("Gruppo")}<select
                 disabled={!!existing}
                 value={groupId}
                 onChange={(e) => {
@@ -313,7 +313,7 @@ function Composer({
                 }}
                 required
               >
-                <option value="">Scegli un gruppo</option>
+                <option value="">{t("Scegli un gruppo")}</option>
                 {groups
                   .filter((g) => !g.archived || g.id === groupId)
                   .map((g) => (
@@ -323,9 +323,7 @@ function Composer({
                   ))}
               </select>
             </label>
-            <label>
-              Valuta
-              <input
+            <label>{t("Valuta")}<input
                 value={currency}
                 maxLength={3}
                 pattern="[A-Z]{3}"
@@ -338,36 +336,34 @@ function Composer({
         <div className="card form-card">
           <CategoryPicker value={category} onChange={setCategory} />
           {!recurring && transferCategory && <div className="notice">
-            <p>La categoria non registra un pareggio. Se stai restituendo soldi a una persona, usa un pareggio parziale o totale: una spesa attribuita soltanto a chi paga non cambia il saldo.</p>
-            {!!groupId && <Link to={"/groups/" + groupId + "?tab=balances"}>Vai ai pareggi del gruppo</Link>}
-            {existing && <p>Questo collegamento non modifica la spesa già salvata.</p>}
+            <p>{t("La categoria non registra un pareggio. Se stai restituendo soldi a una persona, usa un pareggio parziale o totale: una spesa attribuita soltanto a chi paga non cambia il saldo.")}</p>
+            {!!groupId && <Link to={"/groups/" + groupId + "?tab=balances"}>{t("Vai ai pareggi del gruppo")}</Link>}
+            {existing && <p>{t("Questo collegamento non modifica la spesa già salvata.")}</p>}
           </div>}
           <label>
-            {recurring ? "Nome abbonamento" : "Descrizione"}
+            {recurring ? t("Nome abbonamento") : t("Descrizione")}
             <input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={
                 recurring
-                  ? "Netflix, fibra, affitto…"
-                  : "Spesa al supermercato, cena…"
+                  ? t("Netflix, fibra, affitto…")
+                  : t("Spesa al supermercato, cena…")
               }
               maxLength={200}
               required
             />
           </label>
-          <label>
-            Chi ha pagato?
-            <select
+          <label>{t("Chi ha pagato?")}<select
               value={payer}
               onChange={(e) => setPayer(Number(e.target.value))}
               required
             >
-              <option value="">Scegli una persona</option>
+              <option value="">{t("Scegli una persona")}</option>
               {active.map((m) => (
                 <option key={m.user_id} value={m.user_id}>
                   {m.display_name}
-                  {m.user_id === session.user.id ? " (tu)" : ""}
+                  {m.user_id === session.user.id ? t(" (tu)") : ""}
                 </option>
               ))}
             </select>
@@ -376,9 +372,7 @@ function Composer({
           {recurring && (
             <>
               <div className="two-fields">
-                <label>
-                  Ogni
-                  <input
+                <label>{t("Ogni")}<input
                     type="number"
                     min="1"
                     max="1000"
@@ -387,31 +381,25 @@ function Composer({
                     required
                   />
                 </label>
-                <label>
-                  Periodo
-                  <select
+                <label>{t("Periodo")}<select
                     value={frequency}
                     onChange={(e) => setFrequency(e.target.value)}
                   >
-                    <option value="WEEKLY">Settimana/e</option>
-                    <option value="MONTHLY">Mese/i</option>
-                    <option value="YEARLY">Anno/i</option>
+                    <option value="WEEKLY">{t("Settimana/e")}</option>
+                    <option value="MONTHLY">{t("Mese/i")}</option>
+                    <option value="YEARLY">{t("Anno/i")}</option>
                   </select>
                 </label>
               </div>
               <div className="two-fields">
-                <label>
-                  Prima scadenza
-                  <input
+                <label>{t("Prima scadenza")}<input
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                     required
                   />
                 </label>
-                <label>
-                  Ultima scadenza (facoltativa)
-                  <input
+                <label>{t("Ultima scadenza (facoltativa)")}<input
                     type="date"
                     min={date}
                     value={endDate}
@@ -424,8 +412,7 @@ function Composer({
         </div>
         <div className="card form-card">
           <h2>
-            <Users size={20} /> Come dividiamo?
-          </h2>
+            <Users size={20} />{" "}{t("Come dividiamo?")}</h2>
           <div className="segmented split-modes">
             {(["equal", "exact", "percent", "single"] as SplitMode[]).map(
               (m, i) => (
@@ -435,7 +422,7 @@ function Composer({
                   className={mode === m ? "selected" : ""}
                   onClick={() => changeMode(m)}
                 >
-                  {["Uguale", "Importi", "%", "Una persona"][i]}
+                  {[t("Uguale"), t("Importi"), "%", t("Una persona")][i]}
                 </button>
               ),
             )}
@@ -456,7 +443,7 @@ function Composer({
                 <div className="split-input-block">
                   <div className="split-input">
                     <input
-                      aria-label={"Quota di " + member.display_name}
+                      aria-label={t("Quota di ") + member.display_name}
                       inputMode="decimal"
                       placeholder="0"
                       value={values[member.user_id] ?? ""}
@@ -497,20 +484,19 @@ function Composer({
             </div>
           ))}
           {!active.length && (
-            <p className="muted">Scegli un gruppo per vedere i partecipanti.</p>
+            <p className="muted">{t("Scegli un gruppo per vedere i partecipanti.")}</p>
           )}
           <div className={"split-summary " + (!validation ? "valid" : "")}>
             <Coins size={18} />
             <div>
               <strong>
-                {!validation ? "Tutto torna" : "Controlla la suddivisione"}
+                {!validation ? t("Tutto torna") : t("Controlla la suddivisione")}
               </strong>
-              <span>
-                Assegnato {money(exactAssigned, currency)} · Rimanente{" "}
+              <span>{t("Assegnato")}{" "}{money(exactAssigned, currency)}{" "}{t("· Rimanente")}{" "}
                 {money(parsed - exactAssigned, currency)}
               </span>
               {mode === "percent" && (
-                <small>Le percentuali devono sommare 100%.</small>
+                <small>{t("Le percentuali devono sommare 100%.")}</small>
               )}
             </div>
             {!validation && <Check size={20} />}
@@ -521,13 +507,10 @@ function Composer({
         </div>
         <details className="card options">
           <summary>
-            <CalendarDays size={18} /> Altre opzioni
-          </summary>
+            <CalendarDays size={18} />{" "}{t("Altre opzioni")}</summary>
           <div className="form-card">
             {!recurring && (
-              <label>
-                Data della spesa
-                <input
+              <label>{t("Data della spesa")}<input
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
@@ -536,7 +519,7 @@ function Composer({
               </label>
             )}
             <label>
-              {recurring ? "Descrizione (facoltativa)" : "Note (facoltative)"}
+              {recurring ? t("Descrizione (facoltativa)") : t("Note (facoltative)")}
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
@@ -551,17 +534,15 @@ function Composer({
             variant="secondary"
             type="button"
             onClick={() => navigate(-1)}
-          >
-            Annulla
-          </Button>
+          >{t("Annulla")}</Button>
           <Busy
             busy={action.isPending}
             label={
               existing
-                ? "Salva modifiche"
+                ? t("Salva modifiche")
                 : recurring
-                  ? "Crea abbonamento"
-                  : "Aggiungi spesa"
+                  ? t("Crea abbonamento")
+                  : t("Aggiungi spesa")
             }
           />
         </div>

@@ -59,6 +59,9 @@ class AuthResponse(Output):
     user: UserResponse
     csrf_token: str
     timezone: str
+    default_currency: str = "EUR"
+    supported_currencies: list[str] = Field(default_factory=list)
+    supported_languages: list[str] = Field(default_factory=lambda: ["en", "it"])
 
 
 class GroupCreate(Input):

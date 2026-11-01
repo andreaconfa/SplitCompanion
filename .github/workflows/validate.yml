@@ -15,24 +15,48 @@ jobs:
       - run: python -m pip install -r backend/requirements-dev.lock
       - run: python -m pytest backend/tests -q
       - run: python -m ruff check backend/app backend/tests
+      - run: python -m unittest discover -s scripts/tests -v
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - run: npm ci --no-audit --no-fund && npm test && npm run build
         working-directory: frontend
+      - name: English/Italian browser and currency regression checks
+        working-directory: frontend
+        run: |
+          set -euo pipefail
+          npx playwright install --with-deps chromium
+          npm run dev -- --host 127.0.0.1 --port 5174 > /tmp/split-vite.log 2>&1 &
+          VITE_PID=$!
+          trap 'kill "$VITE_PID" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:5174/ > /dev/null; then break; fi
+            sleep 1
+          done
+          node tests/localization.browser.mjs
       - run: docker compose config --quiet
       - name: Secret scan of Git history
         run: docker run --rm -v "$PWD:/repo:ro" ghcr.io/gitleaks/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f git /repo --log-opts=--all --redact
   images:
     needs: source
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            platform: linux/amd64
+            arch: amd64
+          - runner: ubuntu-24.04-arm
+            platform: linux/arm64
+            arch: aarch64
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
       - uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64
+          platforms: ${{ matrix.platform }}
           load: true
           push: false
           tags: splitcompanion:ci
@@ -46,3 +70,15 @@ jobs:
           exit-code: '1'
           ignore-unfixed: true
           severity: CRITICAL,HIGH
+      - name: Build Home Assistant adapter
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: homeassistant
+          platforms: ${{ matrix.platform }}
+          load: true
+          tags: splitcompanion:ha-ci
+          build-args: |
+            BUILD_VERSION=1.2.0-rc.5-homeassistant
+            BUILD_ARCH=${{ matrix.arch }}
+      - run: python3 scripts/homeassistant-smoke.py --image splitcompanion:ha-ci

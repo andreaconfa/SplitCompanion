@@ -3,8 +3,8 @@ import { pushSupport, applicationKey } from './push';
 describe('push capability', () => {
   it('explains HTTPS, unsupported browser, permission blocks and readiness', () => {
     expect(pushSupport(false, true, 'default')).toContain('HTTPS');
-    expect(pushSupport(true, false, 'default')).toContain('supporta');
-    expect(pushSupport(true, true, 'denied')).toContain('bloccate');
+    expect(pushSupport(true, false, 'default')).toContain('support');
+    expect(pushSupport(true, true, 'denied')).toContain('blocked');
     expect(pushSupport(true, true, 'default')).toBe('');
   });
   it('decodes URL-safe application keys', () => {

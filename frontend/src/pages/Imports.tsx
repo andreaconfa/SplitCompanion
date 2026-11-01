@@ -1,3 +1,5 @@
+import { t } from "../i18n";
+import { useLanguage } from "../i18n/react";
 import { useState, type FormEvent } from "react";
 import {
   Upload,
@@ -25,18 +27,18 @@ import { dateLabel } from "../utils/money";
 const statusLabel = (status: string) =>
   (
     ({
-      ANALYZED: "Analizzato",
-      MAPPED: "Mappato",
-      COMPLETED: "Completato",
-      ROLLED_BACK: "Annullato",
+      ANALYZED: t("Analizzato"),
+      MAPPED: t("Mappato"),
+      COMPLETED: t("Completato"),
+      ROLLED_BACK: t("Annullato"),
     }) as Record<string, string>
   )[status] ?? status;
 const recordKind = (kind: string) =>
   (
     ({
-      EXPENSE: "Spesa",
-      SETTLEMENT: "Pagamento",
-      LEGACY: "Movimento storico",
+      EXPENSE: t("Spesa"),
+      SETTLEMENT: t("Pagamento"),
+      LEGACY: t("Movimento storico"),
     }) as Record<string, string>
   )[kind] ?? kind;
 interface MapUser {
@@ -46,6 +48,7 @@ interface MapUser {
   password: string;
 }
 export default function Imports() {
+  useLanguage();
   const { session } = useSession();
   const { users, groups } = useData();
   const batches = useApi<Batch[]>("/imports", session.user.is_admin);
@@ -147,11 +150,11 @@ export default function Imports() {
     e.preventDefault();
     setError("");
     if (!file) {
-      setError("Scegli un file CSV o JSON.");
+      setError(t("Scegli un file CSV o JSON."));
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      setError("Il file supera il limite di 10 MB.");
+      setError(t("Il file supera il limite di 10 MB."));
       return;
     }
     try {
@@ -195,17 +198,17 @@ export default function Imports() {
     }
   };
   if (!session.user.is_admin)
-    return <ErrorBox error="Questa pagina è riservata agli amministratori." />;
+    return <ErrorBox error={t("Questa pagina è riservata agli amministratori.")} />;
   return (
     <>
       <PageHead
-        eyebrow="AMMINISTRAZIONE"
-        title="Un nuovo inizio, con tutto lo storico."
-        description="Porta le vostre spese da Splitwise, senza perdere i conti."
+        eyebrow={t("AMMINISTRAZIONE")}
+        title={t("Un nuovo inizio, con tutto lo storico.")}
+        description={t("Porta le vostre spese da Splitwise, senza perdere i conti.")}
         back="/profile"
       />
       <div className="import-steps">
-        {["File", "Persone", "Anteprima", "Fatto"].map((label, index) => (
+        {[t("File"), t("Persone"), t("Anteprima"), t("Fatto")].map((label, index) => (
           <div
             key={label}
             className={step === index ? "current" : step > index ? "done" : ""}
@@ -232,22 +235,17 @@ export default function Imports() {
               <Upload size={19} />
             </span>
           </div>
-          <h2>Il passato viene con voi.</h2>
-          <p className="muted">
-            Carica l’esportazione CSV o JSON di Splitwise. Prima di salvare
-            vedrai un’anteprima completa.
-          </p>
-          <label className="file-label">
-            Scegli il file
-            <input
+          <h2>{t("Il passato viene con voi.")}</h2>
+          <p className="muted">{t("Carica l’esportazione CSV o JSON di Splitwise. Prima di salvare vedrai un’anteprima completa.")}</p>
+          <label className="file-label">{t("Scegli il file")}<input
               type="file"
               accept=".csv,.json,text/csv,application/json"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               required
             />
           </label>
-          <small className="muted">CSV / JSON · Fino a 10 MB</small>
-          <Busy busy={analyze.isPending} label="Analizza file" />
+          <small className="muted">{t("CSV / JSON · Fino a 10 MB")}</small>
+          <Busy busy={analyze.isPending} label={t("Analizza file")} />
         </form>
       )}
       {step === 1 && batch && (
@@ -257,20 +255,16 @@ export default function Imports() {
             <div>
               <strong>{batch.original_filename}</strong>
               <p>
-                {batch.records_total} record trovati. Associa ogni persona e
-                gruppo all’installazione locale.
-              </p>
+                {batch.records_total}{" "}{t("record trovati. Associa ogni persona e gruppo all’installazione locale.")}</p>
             </div>
           </div>
           <Messages errors={batch.errors} warnings={batch.warnings} />
-          <Section title="Chi sono le persone?">
+          <Section title={t("Chi sono le persone?")}>
             <div className="mapping-cards">
               {Object.entries(userMap).map(([external, value]) => (
                 <div className="card form-card" key={external}>
                   <h3>{external}</h3>
-                  <label>
-                    Associa a
-                    <select
+                  <label>{t("Associa a")}<select
                       value={value.selection}
                       onChange={(e) =>
                         setUserMap({
@@ -279,10 +273,8 @@ export default function Imports() {
                         })
                       }
                     >
-                      <option value="new">Crea nuovo utente</option>
-                      <option value="skip">
-                        Ignora solo se quota e saldo sono zero
-                      </option>
+                      <option value="new">{t("Crea nuovo utente")}</option>
+                      <option value="skip">{t("Ignora solo se quota e saldo sono zero")}</option>
                       {users.map((u) => (
                         <option key={u.id} value={u.id}>
                           {u.display_name} · @{u.username}
@@ -293,9 +285,7 @@ export default function Imports() {
                   {value.selection === "new" && (
                     <>
                       <div className="two-fields">
-                        <label>
-                          Username
-                          <input
+                        <label>{t("Username")}<input
                             required
                             pattern="[a-zA-Z0-9_.-]+"
                             value={value.username}
@@ -310,9 +300,7 @@ export default function Imports() {
                             }
                           />
                         </label>
-                        <label>
-                          Nome
-                          <input
+                        <label>{t("Nome")}<input
                             required
                             value={value.display_name}
                             onChange={(e) =>
@@ -327,9 +315,7 @@ export default function Imports() {
                           />
                         </label>
                       </div>
-                      <label>
-                        Password iniziale
-                        <input
+                      <label>{t("Password iniziale")}<input
                           type="password"
                           autoComplete="new-password"
                           required
@@ -352,14 +338,12 @@ export default function Imports() {
               ))}
             </div>
           </Section>
-          <Section title="Dove vanno i gruppi?">
+          <Section title={t("Dove vanno i gruppi?")}>
             <div className="mapping-cards">
               {Object.entries(groupMap).map(([external, value]) => (
                 <div className="card form-card" key={external}>
                   <h3>{external}</h3>
-                  <label>
-                    Associa a
-                    <select
+                  <label>{t("Associa a")}<select
                       value={value.selection}
                       onChange={(e) =>
                         setGroupMap({
@@ -368,7 +352,7 @@ export default function Imports() {
                         })
                       }
                     >
-                      <option value="new">Crea nuovo gruppo</option>
+                      <option value="new">{t("Crea nuovo gruppo")}</option>
                       {groups.map((g) => (
                         <option key={g.id} value={g.id}>
                           {g.name}
@@ -377,9 +361,7 @@ export default function Imports() {
                     </select>
                   </label>
                   {value.selection === "new" && (
-                    <label>
-                      Nome del gruppo
-                      <input
+                    <label>{t("Nome del gruppo")}<input
                         required
                         value={value.name}
                         onChange={(e) =>
@@ -401,9 +383,8 @@ export default function Imports() {
               type="button"
               onClick={() => setStep(0)}
             >
-              <ArrowLeft size={16} /> Cambia file
-            </Button>
-            <Busy busy={mapping.isPending} label="Controlla anteprima" />
+              <ArrowLeft size={16} />{" "}{t("Cambia file")}</Button>
+            <Busy busy={mapping.isPending} label={t("Controlla anteprima")} />
           </div>
         </form>
       )}
@@ -412,19 +393,19 @@ export default function Imports() {
           <div className="import-stats">
             <div className="card">
               <strong>{preview.importable}</strong>
-              <span>Importabili</span>
+              <span>{t("Importabili")}</span>
             </div>
             <div className="card">
               <strong>{preview.duplicates}</strong>
-              <span>Duplicati saltati</span>
+              <span>{t("Duplicati saltati")}</span>
             </div>
             <div className="card">
               <strong>{preview.errors?.length ?? 0}</strong>
-              <span>Segnalazioni</span>
+              <span>{t("Segnalazioni")}</span>
             </div>
           </div>
           <Messages errors={preview.errors} warnings={preview.warnings} />
-          <Section title="Effetto sui saldi">
+          <Section title={t("Effetto sui saldi")}>
             <div className="card">
               {preview.balance_deltas?.length ? (
                 preview.balance_deltas.map((delta, index) => (
@@ -441,11 +422,11 @@ export default function Imports() {
                   </div>
                 ))
               ) : (
-                <Empty title="Nessuna variazione dei saldi" />
+                <Empty title={t("Nessuna variazione dei saldi")} />
               )}
             </div>
           </Section>
-          <Section title="Movimenti da importare">
+          <Section title={t("Movimenti da importare")}>
             <div className="card">
               {preview.records?.map((record, index) => (
                 <details className="preview-record" key={index}>
@@ -480,14 +461,10 @@ export default function Imports() {
               ))}
             </div>
           </Section>
-          <p className="notice">
-            Solo la conferma salva i movimenti. I duplicati vengono esclusi. Gli
-            eventuali record non importabili sono elencati nelle segnalazioni.
-          </p>
+          <p className="notice">{t("Solo la conferma salva i movimenti. I duplicati vengono esclusi. Gli eventuali record non importabili sono elencati nelle segnalazioni.")}</p>
           <div className="form-footer">
             <Button variant="secondary" onClick={() => setStep(1)}>
-              <ArrowLeft size={16} /> Modifica mappatura
-            </Button>
+              <ArrowLeft size={16} />{" "}{t("Modifica mappatura")}</Button>
             <Button
               disabled={commit.isPending || preview.importable <= 0}
               onClick={async () => {
@@ -500,7 +477,7 @@ export default function Imports() {
                 }
               }}
             >
-              {commit.isPending ? "Importazione…" : "Conferma importazione"}{" "}
+              {commit.isPending ? t("Importazione…") : t("Conferma importazione")}{" "}
               <ArrowRight size={16} />
             </Button>
           </div>
@@ -511,11 +488,9 @@ export default function Imports() {
           <span className="success-icon">
             <Check size={32} />
           </span>
-          <h2>Lo storico è a casa.</h2>
+          <h2>{t("Lo storico è a casa.")}</h2>
           <p>
-            {batch.records_imported} record importati · {batch.records_skipped}{" "}
-            saltati · {batch.records_failed} non importati
-          </p>
+            {batch.records_imported}{" "}{t("record importati ·")}{" "}{batch.records_skipped}{" "}{t("saltati ·")}{" "}{batch.records_failed}{" "}{t("non importati")}</p>
           <Messages errors={batch.errors} warnings={batch.warnings} />
           <Button
             onClick={() => {
@@ -524,12 +499,10 @@ export default function Imports() {
               setPreview(null);
               setFile(null);
             }}
-          >
-            Importa un altro file
-          </Button>
+          >{t("Importa un altro file")}</Button>
         </div>
       )}
-      <Section title="Importazioni precedenti">
+      <Section title={t("Importazioni precedenti")}>
         <State pending={batches.isPending} error={batches.error}>
           <div className="card">
             {batches.data?.length ? (
@@ -542,10 +515,8 @@ export default function Imports() {
                       {statusLabel(item.status)}
                     </span>
                     <small>
-                      {item.records_imported} importati / {item.records_total}{" "}
-                      totali · {item.records_skipped} saltati ·{" "}
-                      {item.records_failed} errori
-                    </small>
+                      {item.records_imported}{" "}{t("importati /")}{" "}{item.records_total}{" "}{t("totali ·")}{" "}{item.records_skipped}{" "}{t("saltati ·")}{" "}
+                      {item.records_failed}{" "}{t("errori")}</small>
                   </div>
                   <div className="row-actions">
                     {![
@@ -554,9 +525,7 @@ export default function Imports() {
                       "rolled_back",
                       "imported",
                     ].includes(item.status.toLowerCase()) && (
-                      <Button variant="secondary" onClick={() => open(item)}>
-                        Riprendi
-                      </Button>
+                      <Button variant="secondary" onClick={() => open(item)}>{t("Riprendi")}</Button>
                     )}
                     {["completed", "committed", "imported"].includes(
                       item.status.toLowerCase(),
@@ -567,7 +536,7 @@ export default function Imports() {
                         onClick={() => {
                           if (
                             confirm(
-                              `Annullare l’importazione «${item.original_filename}»? Verranno rimossi solo i movimenti di questo import e i saldi saranno ricalcolati.`,
+                              t("Annullare l’importazione «{0}»? Verranno rimossi solo i movimenti di questo import e i saldi saranno ricalcolati.", {0: item.original_filename}),
                             )
                           )
                             rollback.mutate(item.id, {
@@ -580,20 +549,19 @@ export default function Imports() {
                             });
                         }}
                       >
-                        <Undo2 size={16} /> Annulla import
-                      </Button>
+                        <Undo2 size={16} />{" "}{t("Annulla import")}</Button>
                     )}
                   </div>
                   {item.errors?.length > 0 && (
                     <details>
-                      <summary>Segnalazioni</summary>
+                      <summary>{t("Segnalazioni")}</summary>
                       <Messages errors={item.errors} warnings={item.warnings} />
                     </details>
                   )}
                 </div>
               ))
             ) : (
-              <Empty title="Nessuna importazione precedente" />
+              <Empty title={t("Nessuna importazione precedente")} />
             )}
           </div>
         </State>
@@ -608,13 +576,14 @@ function Messages({
   errors?: string[];
   warnings?: string[];
 }) {
+  useLanguage();
   return (
     <>
       {errors.length > 0 && (
         <div className="notice error">
           <AlertCircle size={18} />
           <div>
-            <strong>Controlla queste segnalazioni</strong>
+            <strong>{t("Controlla queste segnalazioni")}</strong>
             <ul>
               {errors.map((error, index) => (
                 <li key={index}>{error}</li>
@@ -626,7 +595,7 @@ function Messages({
       {warnings.length > 0 && (
         <div className="notice warning">
           <div>
-            <strong>Da sapere prima di proseguire</strong>
+            <strong>{t("Da sapere prima di proseguire")}</strong>
             <ul>
               {warnings.map((warning, index) => (
                 <li key={index}>{warning}</li>

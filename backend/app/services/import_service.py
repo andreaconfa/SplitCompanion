@@ -1,3 +1,4 @@
+from app.i18n import import_message
 import hashlib
 import json
 import secrets
@@ -107,8 +108,8 @@ def batch_response(batch):
         },
         "people": data.get("people", []),
         "groups": data.get("groups", []),
-        "errors": data.get("errors", []),
-        "warnings": data.get("warnings", []),
+        "errors": [import_message(message) for message in data.get("errors", [])],
+        "warnings": [import_message(message) for message in data.get("warnings", [])],
         "mapping": {"users": safe_users, "groups": mapping.get("groups", {})},
     }
 
@@ -234,8 +235,8 @@ def preview(s, batch, actor):
         "records_total": len(records),
         "importable": len(records) - duplicates if not errors else 0,
         "duplicates": duplicates,
-        "errors": errors,
-        "warnings": warnings,
+        "errors": [import_message(message) for message in errors],
+        "warnings": [import_message(message) for message in warnings],
         "records": records,
         "balance_deltas": [
             {"group": g, "user": u, "currency": c, "amount_cents": v}

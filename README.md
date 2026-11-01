@@ -55,7 +55,7 @@ independent server clients; fresh data requires an iPhone refresh and connectivi
 ![Native iOS app on the open iPhone Duo, with Indigo accent](docs/images/ios-duo.png)
 
 *Screenshots use fictional demo data and the Indigo accent. They show the current
-Italian-language interface; the documentation is in English. Native screenshots
+Italian interface. The app supports English and Italian; the documentation is in English. Native screenshots
 are development previews. Native iOS source is not included in this repository.*
 
 ## What you can do
@@ -66,14 +66,15 @@ are development previews. Native iOS source is not included in this repository.*
 - Explore monthly statistics, categories, participant avatars and transaction history.
 - Import Splitwise CSV/JSON exports with preview and rollback.
 - Use local accounts, two-factor authentication and complete backups.
-- Choose light or dark appearance and five accent colors.
+- Choose English or Italian, light or dark appearance and five accent colors.
+- Set the server’s default currency for new records, without converting existing balances.
 
 ## Quick start on Linux
 
 You need Docker Engine with the Compose plugin and a local disk on a Linux server
-(amd64 / x86-64, Intel or AMD). Run **one replica and one worker**. Do not put SQLite on NFS or SMB.
+(amd64 / x86-64 or arm64 / aarch64). Run **one replica and one worker**. Do not put SQLite on NFS or SMB.
 
-1. Download `compose.yaml` and `env.example` from the [same release](https://github.com/andreaconfa/SplitCompanion/releases/tag/v1.2.0-rc.4).
+1. Download `compose.yaml` and `env.example` from the [same release](https://github.com/andreaconfa/SplitCompanion/releases/tag/v1.2.0-rc.5).
 2. Prepare the configuration and persistent directories:
 
    ```sh
@@ -81,7 +82,7 @@ You need Docker Engine with the Compose plugin and a local disk on a Linux serve
    sudo install -d -m 0700 -o 10001 -g 10001 data backups
    ```
 
-3. The example selects `ghcr.io/andreaconfa/splitcompanion:1.2.0-rc.4`. You can pin
+3. The example selects `ghcr.io/andreaconfa/splitcompanion:1.2.0-rc.5`. You can pin
    the digest from the release instead.
    Alternatively, [build from source](docs/native.md).
 4. Start the application and generate the initial setup code:
@@ -100,6 +101,13 @@ The default binding is **127.0.0.1**, accessible only on the server. To connect 
 a trusted LAN, set `SPLIT_COMPANION_BIND` to the server's LAN address and recreate
 the container. HTTP does not encrypt credentials or data. For Internet access or
 a phone PWA, configure your own [external HTTPS reverse proxy](docs/proxy.md).
+
+## Home Assistant
+
+Install the server as a **Home Assistant App** on Home Assistant OS, including
+64-bit ARM devices. [Installation and configuration](docs/home-assistant.md).
+
+[![Add to Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fandreaconfa%2FSplitCompanion)
 
 ## Update the container, keep your data
 
@@ -137,6 +145,7 @@ for experienced users who want to build or run the application natively on Linux
 ## Documentation and next steps
 
 - [Installation and configuration wiki](wiki/Home.md)
+- [Home Assistant App](docs/home-assistant.md)
 - [Build from source or run natively](docs/native.md)
 - [External reverse proxy and HTTPS](docs/proxy.md)
 - [Backup, updates and account recovery](docs/operations.md)

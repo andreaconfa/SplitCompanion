@@ -5,6 +5,7 @@ from app.config import get_settings
 from app.models import User, now
 from app.schemas import PasswordChange, Login, AuthResponse, UserCreate, UserUpdate, UserResponse
 from app.services.access import get_or_404
+from app.services.instance_settings import public_settings
 
 router = APIRouter(prefix="/api")
 
@@ -43,16 +44,20 @@ def finish_login(s, user, request, response, mfa_verified=False):
         path="/",
     )
     return AuthResponse(
-        user=UserResponse.model_validate(user), csrf_token=csrf, timezone=cfg.timezone
+        user=UserResponse.model_validate(user),
+        csrf_token=csrf,
+        timezone=cfg.timezone,
+        **public_settings(s),
     )
 
 
 @router.get("/auth/me", response_model=AuthResponse)
-def me(request: Request, user: CurrentUser):
+def me(request: Request, user: CurrentUser, s: DB):
     return AuthResponse(
         user=UserResponse.model_validate(user),
         csrf_token=request.state.auth.csrf_token,
         timezone=get_settings().timezone,
+        **public_settings(s),
     )
 
 

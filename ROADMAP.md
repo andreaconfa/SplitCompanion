@@ -6,7 +6,7 @@ schedule. Priorities may change with feedback, available time and adoption.
 
 ## First public release
 
-- [ ] Publish versioned Linux amd64 images and matching source archives.
+- [x] Publish versioned Linux amd64 and arm64 images and matching source archives.
 - [ ] Complete fresh-install, upgrade and restore checks for the supported deployments.
 - [ ] Refine onboarding and documentation from feedback from early self-hosters.
 - [ ] Continue dependency updates, security review and accessibility improvements.
@@ -38,9 +38,18 @@ Android is an intended next platform if there is enough demand and development
 capacity. There is no committed release date. Android users can use the web app
 and installable PWA in the meantime.
 
+## Home Assistant
+
+- [x] Package the server as a Home Assistant App (formerly an add-on), with persistent data and installation instructions.
+- [x] Build and smoke-test amd64 and arm64 images.
+- [ ] Explore an optional HACS integration for balances and upcoming payments in dashboards.
+
+HACS integration and server installation are separate projects. App packaging targets
+Home Assistant OS; a HACS integration would connect to an existing server.
+
 ## Further improvements to explore
 
-- English UI localization and a foundation for additional languages.
+- Additional languages beyond English and Italian.
 - Better data portability, export options and import feedback.
 - More useful statistics and filters for longer transaction histories.
 - Accessibility, keyboard navigation and responsive layout refinements.

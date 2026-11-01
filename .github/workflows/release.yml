@@ -17,17 +17,41 @@ jobs:
           python-version: '3.13'
       - run: python -m pip install -r backend/requirements-dev.lock && python -m pytest backend/tests -q
       - run: python -m ruff check backend/app backend/tests
+      - run: python -m unittest discover -s scripts/tests -v
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - run: npm ci --no-audit --no-fund && npm test && npm run build
         working-directory: frontend
+      - name: English/Italian browser and currency regression checks
+        working-directory: frontend
+        run: |
+          set -euo pipefail
+          npx playwright install --with-deps chromium
+          npm run dev -- --host 127.0.0.1 --port 5174 > /tmp/split-vite.log 2>&1 &
+          VITE_PID=$!
+          trap 'kill "$VITE_PID" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:5174/ > /dev/null; then break; fi
+            sleep 1
+          done
+          node tests/localization.browser.mjs
       - run: docker run --rm -v "$PWD:/repo:ro" ghcr.io/gitleaks/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f git /repo --log-opts=--all --redact
   image:
     needs: test
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            platform: linux/amd64
+            arch: amd64
+          - runner: ubuntu-24.04-arm
+            platform: linux/arm64
+            arch: aarch64
+    runs-on: ${{ matrix.runner }}
     permissions:
-      contents: write
+      contents: read
       packages: write
     steps:
       - uses: actions/checkout@v4
@@ -53,22 +77,22 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64
+          platforms: ${{ matrix.platform }}
           load: true
           push: false
-          tags: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}
+          tags: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}-${{ matrix.arch }}
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
-            org.opencontainers.image.version=${{ steps.names.outputs.version }}
+            org.opencontainers.image.version=${{ steps.names.outputs.version }}-${{ matrix.arch }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.licenses=AGPL-3.0-only
       - run: python3 scripts/container-smoke.py --image "$IMAGE"
         env:
-          IMAGE: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}
+          IMAGE: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}-${{ matrix.arch }}
       - uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.33.1
         with:
           version: v0.76.1
-          image-ref: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}
+          image-ref: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}-${{ matrix.arch }}
           exit-code: '1'
           ignore-unfixed: true
           severity: CRITICAL,HIGH
@@ -76,7 +100,7 @@ jobs:
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.33.1
         with:
           version: v0.76.1
-          image-ref: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}
+          image-ref: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}-${{ matrix.arch }}
           format: json
           output: security-scan.json
           exit-code: '0'
@@ -89,16 +113,68 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - run: docker push "$IMAGE"
         env:
-          IMAGE: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}
-      - name: Attach corresponding source and image digest
+          IMAGE: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}-${{ matrix.arch }}
+      - name: Build Home Assistant adapter
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: homeassistant
+          platforms: ${{ matrix.platform }}
+          load: true
+          tags: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}-homeassistant-${{ matrix.arch }}
+          build-args: |
+            BUILD_VERSION=${{ steps.names.outputs.version }}-homeassistant
+            BUILD_ARCH=${{ matrix.arch }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.version=${{ steps.names.outputs.version }}-homeassistant
+            org.opencontainers.image.licenses=AGPL-3.0-only
+      - run: python3 scripts/homeassistant-smoke.py --image "$IMAGE"
+        env:
+          IMAGE: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}-homeassistant-${{ matrix.arch }}
+      - run: docker push "$IMAGE"
+        env:
+          IMAGE: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}-homeassistant-${{ matrix.arch }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: security-scan-${{ matrix.arch }}
+          path: security-scan.json
+  publish:
+    needs: image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: security-scan-*
+          path: scans
+      - name: Publish tested multi-architecture manifests and release assets
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
-          IMAGE: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}
+          REPOSITORY: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          docker buildx imagetools inspect "$IMAGE" > image-digests.txt
+          VERSION="${RELEASE_TAG#v}"
+          IMAGE="ghcr.io/${REPOSITORY,,}"
+          docker buildx imagetools create -t "$IMAGE:$VERSION" "$IMAGE:$VERSION-amd64" "$IMAGE:$VERSION-aarch64"
+          docker buildx imagetools create -t "$IMAGE:$VERSION-homeassistant" "$IMAGE:$VERSION-homeassistant-amd64" "$IMAGE:$VERSION-homeassistant-aarch64"
+          docker buildx imagetools inspect "$IMAGE:$VERSION" > image-digests.txt
+          docker buildx imagetools inspect "$IMAGE:$VERSION-homeassistant" >> image-digests.txt
           python3 scripts/make-source-archive.py --output splitcompanion-source.tar.gz
+          cp scans/security-scan-amd64/security-scan.json security-scan-amd64.json
+          cp scans/security-scan-aarch64/security-scan.json security-scan-arm64.json
           cp .env.example env.example
-          sha256sum splitcompanion-source.tar.gz image-digests.txt security-scan.json compose.yaml env.example > SHA256SUMS
-          gh release upload "$RELEASE_TAG" splitcompanion-source.tar.gz SHA256SUMS image-digests.txt security-scan.json compose.yaml env.example
+          sha256sum splitcompanion-source.tar.gz image-digests.txt security-scan-*.json compose.yaml env.example > SHA256SUMS
+          gh release upload "$RELEASE_TAG" splitcompanion-source.tar.gz SHA256SUMS image-digests.txt security-scan-*.json compose.yaml env.example

@@ -10,6 +10,8 @@ from sqlmodel import select
 from sqlalchemy import case, extract, func
 
 from app.config import get_settings
+from app.i18n import translate
+from app.services.category_service import category_display_name
 from app.models import Category, Expense, Group, LegacyTransaction
 from app.services.access import visible_ids
 
@@ -164,7 +166,7 @@ def statistics(session, user, month=None, group_id=None, currency=None):
         category_rows.append(
             dict(
                 category_id=cid,
-                name=category.name if category else "Senza categoria",
+                name=category_display_name(category) if category else translate("Senza categoria"),
                 icon_key=category.icon_key if category else "tag",
                 total_cents=amount,
                 count=n,

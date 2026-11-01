@@ -1,0 +1,43 @@
+name: Split Companion
+version: "1.2.0-rc.5-homeassistant"
+slug: splitcompanion
+description: Private shared expenses, subscriptions and balances with a web app and PWA.
+url: https://github.com/andreaconfa/SplitCompanion
+arch:
+  - amd64
+  - aarch64
+image: ghcr.io/andreaconfa/splitcompanion
+startup: application
+boot: auto
+init: true
+timeout: 120
+tmpfs: true
+ports:
+  8000/tcp: 8000
+ports_description:
+  8000/tcp: HTTP web app and API; use an external HTTPS proxy for PWA or Internet access.
+webui: http://[HOST]:[PORT:8000]
+watchdog: http://[HOST]:[PORT:8000]/api/ready
+backup: cold
+options:
+  timezone: UTC
+  allow_http: true
+  public_origin: ""
+  trusted_proxy_ips: ""
+  mfa_required: true
+  push_enabled: false
+  push_vapid_subject: ""
+  backup_hour: 3
+  backup_retention: 14
+  initial_setup_code: ""
+schema:
+  timezone: str
+  allow_http: bool
+  public_origin: str?
+  trusted_proxy_ips: str?
+  mfa_required: bool
+  push_enabled: bool
+  push_vapid_subject: str?
+  backup_hour: int(0,23)
+  backup_retention: int(1,365)
+  initial_setup_code: password?

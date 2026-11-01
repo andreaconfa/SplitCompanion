@@ -1,3 +1,4 @@
+import { getLanguage, t } from "../i18n";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { configureTimezone } from "../utils/money";
 let csrf = "";
@@ -18,11 +19,12 @@ export async function api<T>(
 ): Promise<T> {
   if (!navigator.onLine)
     throw new ApiError(
-      "Split Companion non è raggiungibile. Controlla la connessione alla rete.",
+      t("Split Companion non è raggiungibile. Controlla la connessione alla rete."),
       0,
     );
   const method = options.method ?? "GET";
   const headers = new Headers(options.headers);
+  headers.set("Accept-Language", getLanguage());
   if (options.body && !(options.body instanceof FormData))
     headers.set("Content-Type", "application/json");
   if (method !== "GET") headers.set("X-CSRF-Token", csrf);
@@ -37,12 +39,12 @@ export async function api<T>(
     });
   } catch {
     throw new ApiError(
-      "Split Companion non è raggiungibile. Controlla la connessione alla rete.",
+      t("Split Companion non è raggiungibile. Controlla la connessione alla rete."),
       0,
     );
   }
   if (!response.ok) {
-    let msg = "Operazione non riuscita. Riprova.";
+    let msg = t("Operazione non riuscita. Riprova.");
     try {
       const body = await response.json();
       msg =
@@ -74,7 +76,7 @@ export async function api<T>(
 export function useApi<T>(path: string, enabled = true) {
   return useQuery<T>({
     queryKey: [path],
-    queryFn: () => api<T>(path),
+    queryFn: ({ signal }) => api<T>(path, { signal }),
     enabled,
     staleTime: 20_000,
     retry: (attempt, error) =>

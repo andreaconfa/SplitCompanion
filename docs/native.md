@@ -8,7 +8,7 @@ The corresponding source is included in each release and is available at
 Download the corresponding source archive from the [release](https://github.com/andreaconfa/SplitCompanion/releases), or clone the release tag:
 
 ```sh
-git clone --branch v1.2.0-rc.4 --single-branch https://github.com/andreaconfa/SplitCompanion.git
+git clone --branch v1.2.0-rc.5 --single-branch https://github.com/andreaconfa/SplitCompanion.git
 cd SplitCompanion
 ```
 
@@ -17,15 +17,16 @@ cd SplitCompanion
 From the source directory:
 
 ```sh
-docker build --platform linux/amd64 -t splitcompanion:1.2.0-rc.4 .
+docker build -t splitcompanion:1.2.0-rc.5 .
 cp .env.example .env
-sed -i 's|^SPLIT_COMPANION_IMAGE=.*|SPLIT_COMPANION_IMAGE=splitcompanion:1.2.0-rc.4|' .env
+sed -i 's|^SPLIT_COMPANION_IMAGE=.*|SPLIT_COMPANION_IMAGE=splitcompanion:1.2.0-rc.5|' .env
 sudo install -d -m 0700 -o 10001 -g 10001 data backups
 docker compose up -d
 docker compose exec app python -m app.cli setup-token
 ```
 
-The distributed container targets **Linux amd64 (x86-64)** only. Node builds the web app in a separate stage. The runtime
+The distributed container supports **Linux amd64 (x86-64) and arm64 (aarch64)**.
+Docker selects the host architecture automatically. Node builds the web app in a separate stage. The runtime
 image contains Python, the compiled web app and corresponding source; it does not
 download dependencies or compile code at startup.
 

@@ -1,4 +1,6 @@
 import logging
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from app.i18n import language, language_from_header, translate
 from contextlib import asynccontextmanager
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -14,6 +16,8 @@ from app.config import get_settings
 from app import operations
 from app.version import SERVER_VERSION, API_VERSION
 from app.auth import Admin, DB
+from app.api.settings import router as settings_router
+from app.services.instance_settings import public_settings
 from app.api.setup import router as setup_router
 from app.bootstrap import setup_required
 import uuid
@@ -97,32 +101,51 @@ app.add_middleware(ImportBodyLimit)
 
 @app.middleware("http")
 async def protections(request: Request, call_next):
+    locale = language_from_header(request.headers.get("accept-language", ""))
+    token = language.set(locale)
+    try:
+        response = await protected_response(request, call_next)
+        response.headers["Content-Language"] = locale
+        vary = response.headers.get("Vary", "")
+        response.headers["Vary"] = ", ".join(filter(None, [vary, "Accept-Language"]))
+        return response
+    finally:
+        language.reset(token)
+
+
+async def protected_response(request: Request, call_next):
     public_origin = get_settings().public_origin
     if public_origin and request.url.path not in ("/api/health", "/api/ready"):
         if request.url.scheme != "https":
             return JSONResponse(
-                {"detail": "Accedi tramite il dominio HTTPS configurato sul reverse proxy."},
+                {
+                    "detail": translate(
+                        "Accedi tramite il dominio HTTPS configurato sul reverse proxy."
+                    )
+                },
                 status_code=403,
             )
         if request.url.netloc != urlsplit(public_origin).netloc:
-            return JSONResponse({"detail": "Host non consentito."}, status_code=400)
+            return JSONResponse({"detail": translate("Host non consentito.")}, status_code=400)
 
     if request.url.path == "/api/imports/splitwise/analyze":
         try:
             if int(request.headers.get("content-length", "0")) > 11 * 1024 * 1024:
                 return JSONResponse(
-                    {"detail": "Il file supera il limite di 10 MB."}, status_code=413
+                    {"detail": translate("Il file supera il limite di 10 MB.")}, status_code=413
                 )
         except ValueError:
-            return JSONResponse({"detail": "Richiesta non valida."}, status_code=400)
+            return JSONResponse({"detail": translate("Richiesta non valida.")}, status_code=400)
     if request.method not in ("GET", "HEAD", "OPTIONS"):
         origin = request.headers.get("origin")
         if origin and (origin != (public_origin or f"{request.url.scheme}://{request.url.netloc}")):
             return JSONResponse(
-                {"detail": "Origine della richiesta non consentita."}, status_code=403
+                {"detail": translate("Origine della richiesta non consentita.")}, status_code=403
             )
         if request.headers.get("sec-fetch-site") == "cross-site":
-            return JSONResponse({"detail": "Richiesta cross-site non consentita."}, status_code=403)
+            return JSONResponse(
+                {"detail": translate("Richiesta cross-site non consentita.")}, status_code=403
+            )
     request_id = uuid.uuid4().hex
     started = time.monotonic()
     response = await call_next(request)
@@ -151,22 +174,36 @@ async def protections(request: Request, call_next):
     return response
 
 
+@app.exception_handler(StarletteHTTPException)
+async def http_error(request, exc):
+    return JSONResponse(
+        {"detail": translate(exc.detail) if isinstance(exc.detail, str) else exc.detail},
+        status_code=exc.status_code,
+        headers=exc.headers,
+    )
+
+
 @app.exception_handler(ValueError)
 async def value_error(request, exc):
-    return JSONResponse({"detail": str(exc)}, status_code=422)
+    return JSONResponse({"detail": translate(str(exc))}, status_code=422)
 
 
 @app.exception_handler(ValidationError)
 async def schema_error(request, exc):
     return JSONResponse(
-        {"detail": "Dati non validi. Controlla importi, quote e campi richiesti."}, status_code=422
+        {"detail": translate("Dati non validi. Controlla importi, quote e campi richiesti.")},
+        status_code=422,
     )
 
 
 @app.exception_handler(RequestValidationError)
 async def request_error(request, exc):
     return JSONResponse(
-        {"detail": "Dati non validi. Controlla i campi richiesti e usa centesimi interi."},
+        {
+            "detail": translate(
+                "Dati non validi. Controlla i campi richiesti e usa centesimi interi."
+            )
+        },
         status_code=422,
     )
 
@@ -174,7 +211,7 @@ async def request_error(request, exc):
 @app.exception_handler(IntegrityError)
 async def integrity_error(request, exc):
     return JSONResponse(
-        {"detail": "Operazione in conflitto con dati esistenti. Ricarica e riprova."},
+        {"detail": translate("Operazione in conflitto con dati esistenti. Ricarica e riprova.")},
         status_code=409,
     )
 
@@ -186,12 +223,13 @@ def database_error(request, exc):
     code = getattr(exc.orig, "sqlite_errorcode", None)
     if code is not None and (code & 255) in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED):
         return JSONResponse(
-            {"detail": "Database occupato. Ricarica prima di riprovare."},
+            {"detail": translate("Database occupato. Ricarica prima di riprovare.")},
             status_code=503,
             headers={"Retry-After": "3"},
         )
     return JSONResponse(
-        {"detail": "Database non disponibile. Contatta l’amministratore."}, status_code=503
+        {"detail": translate("Database non disponibile. Contatta l’amministratore.")},
+        status_code=503,
     )
 
 
@@ -209,11 +247,22 @@ def readiness():
 @app.get("/api/meta")
 def metadata(s: DB):
     return {
+        **public_settings(s),
         "server_version": SERVER_VERSION,
         "api_version": API_VERSION,
         "compatibility": {"min_api_version": 1, "max_api_version": 1},
-        "source_available": bool(get_settings().source_archive and Path(get_settings().source_archive).is_file()),
-        "capabilities": ["setup", "avatars", "statistics", "pagination", "subscription_credits"],
+        "source_available": bool(
+            get_settings().source_archive and Path(get_settings().source_archive).is_file()
+        ),
+        "capabilities": [
+            "setup",
+            "avatars",
+            "statistics",
+            "pagination",
+            "subscription_credits",
+            "localization",
+            "server_currency",
+        ],
         "setup_required": setup_required(s),
     }
 
@@ -222,8 +271,12 @@ def metadata(s: DB):
 def corresponding_source():
     archive = get_settings().source_archive
     if not archive or not Path(archive).is_file():
-        return JSONResponse({"detail": "Sorgente non disponibile su questa istanza."}, status_code=404)
-    return FileResponse(archive, media_type="application/gzip", filename="splitcompanion-source.tar.gz")
+        return JSONResponse(
+            {"detail": translate("Sorgente non disponibile su questa istanza.")}, status_code=404
+        )
+    return FileResponse(
+        archive, media_type="application/gzip", filename="splitcompanion-source.tar.gz"
+    )
 
 
 @app.get("/api/admin/status")
@@ -232,8 +285,11 @@ def admin_status(admin: Admin, s: DB):
     from sqlmodel import select
     from app.push_models import PushOutbox
 
-    push_queue = dict(s.exec(select(PushOutbox.status, func.count()).group_by(PushOutbox.status)).all())
+    push_queue = dict(
+        s.exec(select(PushOutbox.status, func.count()).group_by(PushOutbox.status)).all()
+    )
     return {
+        **public_settings(s),
         "server_version": SERVER_VERSION,
         "api_version": API_VERSION,
         "scheduler_enabled": get_settings().scheduler,
@@ -267,6 +323,7 @@ app.include_router(categories_router)
 app.include_router(push_router)
 app.include_router(avatars_router)
 app.include_router(setup_router)
+app.include_router(settings_router)
 
 
 @app.get("/{path:path}", include_in_schema=False)

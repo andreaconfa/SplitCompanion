@@ -1,3 +1,5 @@
+import { t } from "../i18n";
+import { useLanguage } from "../i18n/react";
 import { Person } from "../components/Person";
 import { useState, type FormEvent } from "react";
 import {
@@ -46,6 +48,7 @@ import {
 } from "../components/ui";
 import { cents, dateLabel, decimal, today, money } from "../utils/money";
 export default function Groups() {
+  useLanguage();
   const { groups } = useData();
   const [search, setSearch] = useSearchParams();
   const show = search.get("new") === "1";
@@ -54,12 +57,11 @@ export default function Groups() {
   return (
     <>
       <PageHead
-                title="Gruppi"
-        description="Casa, viaggi e piccoli progetti insieme."
+                title={t("Gruppi")}
+        description={t("Casa, viaggi e piccoli progetti insieme.")}
         action={
           <Button onClick={() => setShow(true)}>
-            <Plus size={18} /> Nuovo gruppo
-          </Button>
+            <Plus size={18} />{" "}{t("Nuovo gruppo")}</Button>
         }
       />
       <label className="checkbox-line">
@@ -67,9 +69,7 @@ export default function Groups() {
           type="checkbox"
           checked={archived}
           onChange={(e) => setArchived(e.target.checked)}
-        />{" "}
-        Mostra anche i gruppi archiviati
-      </label>
+        />{" "}{t("Mostra anche i gruppi archiviati")}</label>
       <div className="group-grid">
         {groups
           .filter((g) => archived || !g.archived)
@@ -78,10 +78,10 @@ export default function Groups() {
           ))}
         {!groups.length && (
           <Empty
-            title="Ogni gruppo è un piccolo mondo"
-            detail="Crea il primo per iniziare a condividere le spese."
+            title={t("Ogni gruppo è un piccolo mondo")}
+            detail={t("Crea il primo per iniziare a condividere le spese.")}
             action={
-              <Button onClick={() => setShow(true)}>Crea un gruppo</Button>
+              <Button onClick={() => setShow(true)}>{t("Crea un gruppo")}</Button>
             }
           />
         )}
@@ -91,6 +91,7 @@ export default function Groups() {
   );
 }
 function GroupCard({ group, color }: { group: Group; color: number }) {
+  useLanguage();
   const balances = useApi<Balance[]>("/groups/" + group.id + "/balances");
   const members = useApi<Member[]>("/groups/" + group.id + "/members");
   const { session } = useSession();
@@ -98,17 +99,17 @@ function GroupCard({ group, color }: { group: Group; color: number }) {
     <Link className={"group-card tone-" + color} to={"/groups/" + group.id}>
       <div className="group-cover">
         <House size={30} />
-        <span>{group.archived ? "Archiviato" : "Il nostro spazio"}</span>
+        <span>{group.archived ? t("Archiviato") : t("Il nostro spazio")}</span>
       </div>
       <div className="group-card-body">
         <div className="heading-row">
           <h2>{group.name}</h2>
           <ChevronRight size={20} />
         </div>
-        <p>{members.data?.filter((m) => m.active).length ?? "…"} membri</p>
+        <p>{members.data?.filter((m) => m.active).length ?? "…"}{" "}{t("membri")}</p>
         <ErrorBox error={balances.error || members.error} />
         <div className="group-bottom">
-          <span>Il tuo saldo</span>
+          <span>{t("Il tuo saldo")}</span>
           <div>
             {balances.data
               ?.filter((b) => b.user_id === session.user.id)
@@ -127,6 +128,7 @@ function GroupCard({ group, color }: { group: Group; color: number }) {
   );
 }
 function GroupForm({ group, onClose }: { group?: Group; onClose: () => void }) {
+  useLanguage();
   const { users } = useData();
   const { session } = useSession();
   const navigate = useNavigate();
@@ -152,7 +154,7 @@ function GroupForm({ group, onClose }: { group?: Group; onClose: () => void }) {
   };
   return (
     <Sheet
-      title={group ? "Modifica gruppo" : "Un nuovo gruppo"}
+      title={group ? t("Modifica gruppo") : t("Un nuovo gruppo")}
       onClose={onClose}
     >
       <form
@@ -161,19 +163,15 @@ function GroupForm({ group, onClose }: { group?: Group; onClose: () => void }) {
         }}
         className="form-card"
       >
-        <label>
-          Nome
-          <input
+        <label>{t("Nome")}<input
             value={name}
             required
             maxLength={100}
-            placeholder="Casa, vacanza, weekend…"
+            placeholder={t("Casa, vacanza, weekend…")}
             onChange={(e) => setName(e.target.value)}
           />
         </label>
-        <label>
-          Descrizione (facoltativa)
-          <textarea
+        <label>{t("Descrizione (facoltativa)")}<textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
@@ -181,7 +179,7 @@ function GroupForm({ group, onClose }: { group?: Group; onClose: () => void }) {
         </label>
         {!group && (
           <fieldset>
-            <legend>Chi c’è nel gruppo?</legend>
+            <legend>{t("Chi c’è nel gruppo?")}</legend>
             {users
               .filter((u) => u.is_active)
               .map((u) => (
@@ -207,13 +205,14 @@ function GroupForm({ group, onClose }: { group?: Group; onClose: () => void }) {
         <ErrorBox error={action.error} />
         <Busy
           busy={action.isPending}
-          label={group ? "Salva gruppo" : "Crea gruppo"}
+          label={group ? t("Salva gruppo") : t("Crea gruppo")}
         />
       </form>
     </Sheet>
   );
 }
 export function GroupDetail() {
+  useLanguage();
   const { id } = useParams();
   const gid = Number(id);
   const [search, setSearch] = useSearchParams();
@@ -250,7 +249,7 @@ export function GroupDetail() {
   const names = (userId: number) =>
     users.find((u) => u.id === userId)?.display_name ??
     members.data?.find((m) => m.user_id === userId)?.display_name ??
-    "Utente";
+    t("Utente");
   const active = members.data?.filter((m) => m.active) ?? [];
   const payments = (
     <div className="card">
@@ -267,27 +266,27 @@ export function GroupDetail() {
               <span>
                 {dateLabel(p.settlement_date)} ·{" "}
                 {p.kind === "GENERAL"
-                  ? "Pagamento"
+                  ? t("Pagamento")
                   : p.kind === "SUBSCRIPTION_ADVANCE"
-                    ? "Anticipo"
-                    : "Rimborso"}
+                    ? t("Anticipo")
+                    : t("Rimborso")}
               </span>
               {p.notes && <small>{p.notes}</small>}
               {p.source === "SPLITWISE" && (
-                <small>Importato da Splitwise</small>
+                <small>{t("Importato da Splitwise")}</small>
               )}
             </div>
             <Money value={p.amount_cents} currency={p.currency} />
             {p.source !== "SPLITWISE" && (
               <button
                 className="icon-button"
-                title="Elimina pagamento"
-                aria-label="Elimina pagamento"
+                title={t("Elimina pagamento")}
+                aria-label={t("Elimina pagamento")}
                 disabled={action.isPending}
                 onClick={() => {
                   if (
                     confirm(
-                      "Eliminare questo pagamento? Il saldo sarà ricalcolato.",
+                      t("Eliminare questo pagamento? Il saldo sarà ricalcolato."),
                     )
                   )
                     action.mutate({
@@ -302,7 +301,7 @@ export function GroupDetail() {
           </div>
         ))
       ) : (
-        <Empty title="Nessun pagamento registrato" />
+        <Empty title={t("Nessun pagamento registrato")} />
       )}
       <ErrorBox error={settlements.error} />
     </div>
@@ -313,19 +312,19 @@ export function GroupDetail() {
         <>
           <PageHead
             eyebrow={
-              group.data.archived ? "GRUPPO ARCHIVIATO" : "IL VOSTRO SPAZIO"
+              group.data.archived ? t("GRUPPO ARCHIVIATO") : t("IL VOSTRO SPAZIO")
             }
             title={group.data.name}
             description={
               group.data.description ||
-              `${active.length} persone, una cosa in comune.`
+              t("{0} persone, una cosa in comune.", {0: active.length})
             }
             back="/groups"
             action={
               <Button
                 variant="secondary"
                 onClick={() => setEdit(true)}
-                aria-label="Modifica gruppo"
+                aria-label={t("Modifica gruppo")}
               >
                 <Pencil size={18} />
               </Button>
@@ -333,11 +332,11 @@ export function GroupDetail() {
           />
           <div className="tabs">
             {[
-              ["overview", "Panoramica"],
-              ["expenses", "Spese"],
-              ["subscriptions", "Abbonamenti"],
-              ["balances", "Saldi"],
-              ["members", "Membri"],
+              ["overview", t("Panoramica")],
+              ["expenses", t("Spese")],
+              ["subscriptions", t("Abbonamenti")],
+              ["balances", t("Saldi")],
+              ["members", t("Membri")],
             ].map(([value, label]) => (
               <button
                 key={value}
@@ -352,7 +351,7 @@ export function GroupDetail() {
           {(tab === "overview" || tab === "balances") && (
             <>
               <div className="card group-balance">
-                <span>Il tuo saldo nel gruppo</span>
+                <span>{t("Il tuo saldo nel gruppo")}</span>
                 <div>
                   {balances.data
                     ?.filter((b) => b.user_id === session.user.id)
@@ -368,11 +367,10 @@ export function GroupDetail() {
                 <ErrorBox error={balances.error} />
               </div>
               <Section
-                title="Pareggi"
+                title={t("Pareggi")}
                 action={
                   <Button variant="secondary" onClick={() => setPayment(debts.data?.find(d => d.paid_by_user_id === session.user.id || d.paid_to_user_id === session.user.id) ?? null)}>
-                    <Plus size={16} /> Registra un pareggio
-                  </Button>
+                    <Plus size={16} />{" "}{t("Registra un pareggio")}</Button>
                 }
               >
                 <State pending={debts.isPending} error={debts.error}>
@@ -385,7 +383,7 @@ export function GroupDetail() {
                               <Person userId={debt.paid_by_user_id} name={names(debt.paid_by_user_id)} small /> →{" "}
                               <Person userId={debt.paid_to_user_id} name={names(debt.paid_to_user_id)} small />
                             </strong>
-                            <span>Per tornare in pari</span>
+                            <span>{t("Per tornare in pari")}</span>
                           </div>
                           <div className="row-end">
                             <Money
@@ -395,16 +393,15 @@ export function GroupDetail() {
                             <button
                               className="text-link"
                               onClick={() => setPayment(debt)}
-                            >
-                              Pareggia <Check size={14} />
+                            >{t("Pareggia")}{" "}<Check size={14} />
                             </button>
                           </div>
                         </div>
                       ))
                     ) : (
                       <Empty
-                        title="Tutti in pari"
-                        detail="Nessun pagamento da suggerire."
+                        title={t("Tutti in pari")}
+                        detail={t("Nessun pagamento da suggerire.")}
                       />
                     )}
                   </div>
@@ -414,7 +411,7 @@ export function GroupDetail() {
           )}
           {tab === "balances" && (
             <>
-              <Section title="Saldi delle persone">
+              <Section title={t("Saldi delle persone")}>
                 <div className="card">
                   {balances.data?.map((b) => (
                     <div className="list-row" key={b.user_id + b.currency}>
@@ -423,10 +420,10 @@ export function GroupDetail() {
                         <strong><Person userId={b.user_id} name={names(b.user_id)} small /></strong>
                         <span>
                           {b.balance_cents > 0
-                            ? "Deve ricevere"
+                            ? t("Deve ricevere")
                             : b.balance_cents < 0
-                              ? "Deve pagare"
-                              : "In pari"}
+                              ? t("Deve pagare")
+                              : t("In pari")}
                         </span>
                       </div>
                       <Money
@@ -438,15 +435,15 @@ export function GroupDetail() {
                   ))}
                 </div>
               </Section>
-              <Section title="Pagamenti e trasferimenti">{payments}</Section>
+              <Section title={t("Pagamenti e trasferimenti")}>{payments}</Section>
             </>
           )}
           {(tab === "overview" || tab === "expenses") && (
             <>
               <Section
-                title={tab === "overview" ? "Ultime spese" : "Spese del gruppo"}
+                title={tab === "overview" ? t("Ultime spese") : t("Spese del gruppo")}
                 action={
-                  <AddLink to={"/expenses/new?group_id=" + id} label="Spesa" />
+                  <AddLink to={"/expenses/new?group_id=" + id} label={t("Spesa")} />
                 }
               >
                 <State pending={expenses.isPending || legacy.isPending} error={expenses.error || legacy.error}>
@@ -460,13 +457,12 @@ export function GroupDetail() {
                         )
                       )
                     ) : (
-                      <Empty title="Nessuna spesa, per ora" detail="Aggiungi la prima spesa condivisa." />
+                      <Empty title={t("Nessuna spesa, per ora")} detail={t("Aggiungi la prima spesa condivisa.")} />
                     )}
                   </div>
                 </State>
                 {tab === "overview" && history.length > 5 && (
-                  <Link className="text-link" to={"/groups/" + id + "?tab=expenses"}>
-                    Vedi tutte le {history.length} spese <ChevronRight size={16} />
+                  <Link className="text-link" to={"/groups/" + id + "?tab=expenses"}>{t("Vedi tutte le")}{" "}{history.length}{" "}{t("spese")}{" "}<ChevronRight size={16} />
                   </Link>
                 )}
               </Section>
@@ -474,11 +470,11 @@ export function GroupDetail() {
           )}
           {(tab === "overview" || tab === "subscriptions") && (
             <Section
-              title="Abbonamenti"
+              title={t("Abbonamenti")}
               action={
                 <AddLink
                   to={"/subscriptions/new?group_id=" + id}
-                  label="Nuovo"
+                  label={t("Nuovo")}
                 />
               }
             >
@@ -497,8 +493,8 @@ export function GroupDetail() {
                     ))
                   ) : (
                     <Empty
-                      title="La routine, senza pensieri"
-                      detail="Aggiungi affitto, servizi o abbonamenti condivisi."
+                      title={t("La routine, senza pensieri")}
+                      detail={t("Aggiungi affitto, servizi o abbonamenti condivisi.")}
                     />
                   )}
                 </div>
@@ -507,7 +503,7 @@ export function GroupDetail() {
           )}
           {tab === "members" && (
             <>
-              <Section title="Le persone">
+              <Section title={t("Le persone")}>
                 <State pending={members.isPending} error={members.error}>
                   <div className="card">
                     {members.data?.map((member) => (
@@ -517,20 +513,20 @@ export function GroupDetail() {
                           <strong><Person userId={member.user_id} name={member.display_name} /></strong>
                           <span>
                             @{member.username}
-                            {!member.active ? " · Membro rimosso" : ""}
+                            {!member.active ? t(" · Membro rimosso") : ""}
                           </span>
                         </div>
                         {member.active && (
                           <button
-                            aria-label={"Rimuovi " + member.display_name}
+                            aria-label={t("Rimuovi ") + member.display_name}
                             className="icon-button"
                             disabled={action.isPending}
                             onClick={() => {
                               if (
                                 confirm(
-                                  "Rimuovere " +
+                                  t("Rimuovere ") +
                                     member.display_name +
-                                    " dal gruppo? Lo storico resterà disponibile.",
+                                    t(" dal gruppo? Lo storico resterà disponibile."),
                                 )
                               )
                                 action.mutate({
@@ -566,14 +562,12 @@ export function GroupDetail() {
                     );
                 }}
               >
-                <label>
-                  Aggiungi una persona
-                  <select
+                <label>{t("Aggiungi una persona")}<select
                     value={newMember}
                     onChange={(e) => setNewMember(e.target.value)}
                     required
                   >
-                    <option value="">Scegli utente</option>
+                    <option value="">{t("Scegli utente")}</option>
                     {users
                       .filter(
                         (u) =>
@@ -587,17 +581,15 @@ export function GroupDetail() {
                       ))}
                   </select>
                 </label>
-                <Busy busy={action.isPending} label="Aggiungi al gruppo" />
+                <Busy busy={action.isPending} label={t("Aggiungi al gruppo")} />
               </form>
               <div className="card form-card">
                 <h3>
                   {group.data.archived
-                    ? "Ripristina il gruppo"
-                    : "Archivia questo gruppo"}
+                    ? t("Ripristina il gruppo")
+                    : t("Archivia questo gruppo")}
                 </h3>
-                <p className="muted">
-                  Lo storico e i saldi rimangono consultabili.
-                </p>
+                <p className="muted">{t("Lo storico e i saldi rimangono consultabili.")}</p>
                 <Button
                   variant="secondary"
                   disabled={action.isPending}
@@ -610,7 +602,7 @@ export function GroupDetail() {
                   }
                 >
                   <Archive size={18} />
-                  {group.data.archived ? "Ripristina" : "Archivia gruppo"}
+                  {group.data.archived ? t("Ripristina") : t("Archivia gruppo")}
                 </Button>
               </div>
             </>
@@ -642,6 +634,7 @@ export function PaymentForm({
   members: Member[];
   onClose: () => void;
 }) {
+  useLanguage();
   const { session } = useSession();
   const suggestions = useApi<Debt[]>("/groups/" + groupId + "/debts");
   const [payer, setPayer] = useState(
@@ -653,7 +646,7 @@ export function PaymentForm({
       0,
   );
   const [amount, setAmount] = useState(debt ? decimal(debt.amount_cents) : "");
-  const [currency, setCurrency] = useState(debt?.currency ?? "EUR");
+  const [currency, setCurrency] = useState(debt?.currency ?? session.default_currency ?? "EUR");
   const [date, setDate] = useState(today());
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
@@ -663,14 +656,14 @@ export function PaymentForm({
   const suggested = suggestions.data?.find(d => d.paid_by_user_id === payer && d.paid_to_user_id === receiver && d.currency === currency);
   let entered = 0;
   try { entered = cents(amount || "0"); } catch { /* validation on submit */ }
-  const person = (id: number) => members.find(m => m.user_id === id)?.display_name ?? "Persona";
+  const person = (id: number) => members.find(m => m.user_id === id)?.display_name ?? t("Persona");
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     try {
       const value = cents(amount);
       if (!value || !payer || !receiver || payer === receiver)
         throw new Error(
-          "Scegli due persone diverse e un importo maggiore di zero.",
+          t("Scegli due persone diverse e un importo maggiore di zero."),
         );
       setError("");
       await action.mutateAsync({
@@ -688,14 +681,10 @@ export function PaymentForm({
     }
   };
   return (
-    <Sheet title="Registra un pareggio" onClose={onClose}>
+    <Sheet title={t("Registra un pareggio")} onClose={onClose}>
       <form className="form-card" onSubmit={submit}>
-        <p className="muted">
-          Registra i soldi già consegnati: il pareggio riduce il debito nel gruppo e aggiorna il saldo complessivo. Non crea una spesa.
-        </p>
-        <label>
-          Chi ha pagato?
-          <select
+        <p className="muted">{t("Registra i soldi già consegnati: il pareggio riduce il debito nel gruppo e aggiorna il saldo complessivo. Non crea una spesa.")}</p>
+        <label>{t("Chi ha pagato?")}<select
             required
             value={payer}
             onChange={(e) => {
@@ -711,14 +700,12 @@ export function PaymentForm({
             ))}
           </select>
         </label>
-        <label>
-          A chi?
-          <select
+        <label>{t("A chi?")}<select
             required
             value={receiver}
             onChange={(e) => { setReceiver(Number(e.target.value)); setAmount(""); }}
           >
-            <option value="">Scegli destinatario</option>
+            <option value="">{t("Scegli destinatario")}</option>
             {members
               .filter((m) => m.user_id !== payer)
               .map((m) => (
@@ -729,25 +716,21 @@ export function PaymentForm({
           </select>
         </label>
         <div className="category-actions">
-          <Button type="button" variant="secondary" onClick={() => setAmount("")}>Pareggio parziale</Button>
+          <Button type="button" variant="secondary" onClick={() => setAmount("")}>{t("Pareggio parziale")}</Button>
           <Button type="button" variant="secondary" disabled={!suggested || suggestions.isFetching}
-            onClick={() => { if (suggested) setAmount(decimal(suggested.amount_cents)); }}>Pareggio totale</Button>
+            onClick={() => { if (suggested) setAmount(decimal(suggested.amount_cents)); }}>{t("Pareggio totale")}</Button>
         </div>
-        <p className="muted">Parziale: inserisci quanto hai versato. Totale: usa l’importo suggerito tra queste persone, nella valuta scelta.</p>
+        <p className="muted">{t("Parziale: inserisci quanto hai versato. Totale: usa l’importo suggerito tra queste persone, nella valuta scelta.")}</p>
         <ErrorBox error={suggestions.error} />
         <div className="two-fields">
-          <label>
-            Importo
-            <input
+          <label>{t("Importo")}<input
               inputMode="decimal"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               required
             />
           </label>
-          <label>
-            Valuta
-            <input
+          <label>{t("Valuta")}<input
               pattern="[A-Z]{3}"
               maxLength={3}
               value={currency}
@@ -756,18 +739,14 @@ export function PaymentForm({
             />
           </label>
         </div>
-        <label>
-          Data
-          <input
+        <label>{t("Data")}<input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
             required
           />
         </label>
-        <label>
-          Note
-          <textarea
+        <label>{t("Note")}<textarea
             rows={2}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
@@ -776,13 +755,13 @@ export function PaymentForm({
         {entered > 0 && /^[A-Z]{3}$/.test(currency) && payer !== receiver && (
           <div className="notice" role="status">
             <strong>{person(payer)} → {person(receiver)}: <Money value={entered} currency={currency} /></strong>
-            {suggested ? <p>Resta da saldare per questo pagamento suggerito: <Money value={Math.max(0, suggested.amount_cents - entered)} currency={currency} />.
-              {entered > suggested.amount_cents && <> Stai versando <Money value={entered - suggested.amount_cents} currency={currency} /> in più rispetto al debito suggerito.</>}
-            </p> : <p>Non c’è un debito suggerito in questa direzione e valuta. Verifica le persone: il pagamento modifica comunque i saldi.</p>}
+            {suggested ? <p>{t("Resta da saldare per questo pagamento suggerito:")}{" "}<Money value={Math.max(0, suggested.amount_cents - entered)} currency={currency} />.
+              {entered > suggested.amount_cents && <>{" "}{t("Stai versando")}{" "}<Money value={entered - suggested.amount_cents} currency={currency} />{" "}{t("in più rispetto al debito suggerito.")}</>}
+            </p> : <p>{t("Non c’è un debito suggerito in questa direzione e valuta. Verifica le persone: il pagamento modifica comunque i saldi.")}</p>}
           </div>
         )}
         <ErrorBox error={error || action.error} />
-        <Busy busy={action.isPending} label="Conferma pareggio" />
+        <Busy busy={action.isPending} label={t("Conferma pareggio")} />
       </form>
     </Sheet>
   );

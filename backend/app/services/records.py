@@ -70,6 +70,9 @@ def resolve_splits(s, data):
 
 
 def create_expense(s, data, actor_id, **metadata):
+    from app.services.instance_settings import apply_currency_default
+
+    apply_currency_default(s, data)
     parts = resolve_splits(s, data)
     e = Expense(
         **data.model_dump(exclude={"split_mode", "splits", "icon_key"}),

@@ -9,10 +9,10 @@ import {
 } from "./money";
 describe("decimal money without floating point", () => {
   it("accepts Italian and dot decimals with exact cents", () => {
-    expect(cents("12,50")).toBe(1250);
+    expect(cents("12.50")).toBe(1250);
     expect(cents("0.29")).toBe(29);
     expect(cents("120")).toBe(12000);
-    expect(decimal(1)).toBe("0,01");
+    expect(decimal(1)).toBe("0.01");
   });
   it("rejects precision, negatives, exponent and unsafe integers", () => {
     for (const v of ["1.001", "-2", "1e3", "12,2.3", "9007199254740992", ""])
@@ -44,10 +44,10 @@ describe("decimal money without floating point", () => {
 
 describe("editable currency drafts", () => {
   it("renders empty and partial currency codes without throwing", () => {
-    expect(money(1250, "")).toBe("12,50");
-    expect(money(1250, "E")).toBe("12,50 E");
-    expect(money(1250, "EU")).toBe("12,50 EU");
-    expect(money(1250, "USD")).toContain("12,50");
+    expect(money(1250, "")).toBe("12.50");
+    expect(money(1250, "E")).toBe("12.50 E");
+    expect(money(1250, "EU")).toBe("12.50 EU");
+    expect(money(1250, "USD")).toContain("12.50");
   });
 });
 describe("configured installation dates", () => {
@@ -59,4 +59,16 @@ describe("configured installation dates", () => {
       configureTimezone("Europe/Rome");
     }
   });
+});
+it('formats editable decimal values using the chosen language while accepting either separator', async () => {
+  const {setLanguage} = await import('../i18n');
+  setLanguage('en');
+  expect(decimal(1234)).toBe('12.34');
+  setLanguage('it');
+  expect(decimal(1234)).toBe('12,34');
+  expect(cents('12.34')).toBe(cents('12,34'));
+  setLanguage('en');
+});
+it('reports the selected currency when exact shares do not add up', () => {
+  expect(() => splitAmounts(1234, 'exact', [1], {1:'1'}, 'USD')).toThrow('$12.34');
 });

@@ -63,3 +63,6 @@
 !frontend/*.test.js
 
 !ROADMAP.md
+!repository.yaml
+!homeassistant/
+!homeassistant/**

@@ -56,6 +56,9 @@ def list_subscriptions(
 @router.post("", response_model=SubscriptionResponse, status_code=201)
 def add_subscription(data: SubscriptionCreate, user: CurrentUser, s: DB):
     group_access(s, user, data.group_id, True)
+    from app.services.instance_settings import apply_currency_default
+
+    apply_currency_default(s, data)
     validate_rule(data.recurrence_rule)
     if data.end_date and data.end_date < data.start_date:
         raise ValueError("La fine deve essere successiva all’inizio.")

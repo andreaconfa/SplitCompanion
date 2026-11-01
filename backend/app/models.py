@@ -249,3 +249,9 @@ class SetupState(SQLModel, table=True):
     expires_at: Optional[datetime] = None
     attempts: int = 0
     attempt_window_expires_at: Optional[datetime] = None
+
+
+class InstanceSettings(SQLModel, table=True):
+    __table_args__ = (CheckConstraint("id = 1"),)
+    id: int = Field(default=1, primary_key=True)
+    default_currency: str = "EUR"

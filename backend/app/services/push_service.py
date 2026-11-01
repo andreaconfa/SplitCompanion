@@ -1,5 +1,6 @@
 """Transactional queue with bounded, privacy-preserving Web Push delivery."""
 
+from app.i18n import translate
 import base64
 import json
 import os
@@ -220,9 +221,13 @@ def dispatch_push(engine, sender=None):
             }
             payload = {
                 "title": "Split Companion",
-                "body": "Una nuova spesa ti coinvolge."
-                if job.expense_id
-                else "Le notifiche su questo dispositivo sono attive.",
+                "language": device.language,
+                "body": translate(
+                    "Una nuova spesa ti coinvolge."
+                    if job.expense_id
+                    else "Le notifiche su questo dispositivo sono attive.",
+                    device.language,
+                ),
                 "url": f"/expenses/{job.expense_id}" if job.expense_id else "/profile",
                 "tag": job.event_key,
             }

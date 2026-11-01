@@ -1,0 +1,29 @@
+configuration:
+  timezone:
+    name: Fuso orario
+    description: Fuso IANA per scadenze e backup, per esempio Europe/Rome.
+  allow_http:
+    name: Consenti HTTP
+    description: Solo per una rete locale fidata. Disattiva quando usi un proxy HTTPS esterno.
+  public_origin:
+    name: Indirizzo pubblico
+    description: URL HTTPS esterno esatto, senza percorso o barra finale.
+  trusted_proxy_ips:
+    name: IP dei proxy fidati
+    description: Indirizzi o reti specifiche separati da virgole. Lascia vuoto per accesso LAN diretto.
+  mfa_required:
+    name: Richiedi verifica a due fattori
+  push_enabled:
+    name: Attiva notifiche web
+  push_vapid_subject:
+    name: Contatto notifiche
+    description: Contatto mailto o URL HTTPS gestito dall’amministratore.
+  backup_hour:
+    name: Ora del backup giornaliero
+  backup_retention:
+    name: Backup giornalieri da conservare
+  initial_setup_code:
+    name: Codice di configurazione iniziale
+    description: Codice casuale di 32–128 caratteri generato dal gestore password. Usalo nel browser entro 30 minuti, poi svuota questo campo.
+network:
+  8000/tcp: App web e API HTTP; configura HTTPS esterno per PWA o accesso Internet.

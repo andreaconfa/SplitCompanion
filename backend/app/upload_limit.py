@@ -1,6 +1,7 @@
 """Bound multipart bodies before Starlette can spool unbounded chunked uploads."""
 
 import re
+from app.i18n import translate, language_from_header
 
 from starlette.responses import JSONResponse
 
@@ -66,5 +67,12 @@ class ImportBodyLimit:
         await self.app(scope, bounded_receive, send)
 
     async def reject(self, scope, receive, send):
-        response = JSONResponse({"detail": "Il file supera il limite consentito."}, status_code=413)
+        locale = language_from_header(
+            dict(scope.get("headers", [])).get(b"accept-language", b"").decode("latin-1")
+        )
+        response = JSONResponse(
+            {"detail": translate("Il file supera il limite consentito.", locale)},
+            status_code=413,
+            headers={"Content-Language": locale},
+        )
         await response(scope, receive, send)

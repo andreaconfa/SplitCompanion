@@ -101,8 +101,9 @@ def test_password_change_requires_second_factor_preserves_mfa_and_consumes_recov
         "/api/auth/login", json={"username": "alex", "password": "password12345"}
     ).json()["challenge_token"]
     secret = client.post("/api/auth/mfa/setup", json={"challenge_token": token}).json()["secret"]
+    enrollment_code = pyotp.TOTP(secret).now()
     enrolled = client.post(
-        "/api/auth/mfa/confirm", json={"challenge_token": token, "code": pyotp.TOTP(secret).now()}
+        "/api/auth/mfa/confirm", json={"challenge_token": token, "code": enrollment_code}
     ).json()
     client.headers["X-CSRF-Token"] = enrolled["session"]["csrf_token"]
     codes = enrolled["recovery_codes"]
@@ -111,9 +112,7 @@ def test_password_change_requires_second_factor_preserves_mfa_and_consumes_recov
     assert client.post("/api/auth/password", json={**payload, "code": "invalid"}).status_code == 401
     # Enrollment OTP was already consumed and must not work again.
     assert (
-        client.post(
-            "/api/auth/password", json={**payload, "code": pyotp.TOTP(secret).now()}
-        ).status_code
+        client.post("/api/auth/password", json={**payload, "code": enrollment_code}).status_code
         == 401
     )
     assert client.post("/api/auth/password", json={**payload, "code": codes[0]}).status_code == 200

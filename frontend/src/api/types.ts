@@ -10,6 +10,9 @@ export interface Session {
   user: User;
   csrf_token: string;
   timezone: string;
+  default_currency?: string;
+  supported_currencies?: string[];
+  supported_languages?: ("en" | "it")[];
 }
 export interface Group {
   id: number;
@@ -173,7 +176,7 @@ export interface Preview {
 }
 
 export interface CategoryMetadata { category_id?: number | null; icon_key?: string | null; }
-export interface Category { id: number; name: string; slug: string | null; icon_key: string; created_by_user_id: number | null; }
+export interface Category { display_name?: string; id: number; name: string; slug: string | null; icon_key: string; created_by_user_id: number | null; }
 export interface IconCatalog { builtin: string[]; custom: {id: number; name: string; icon_key: string; created_by_user_id: number}[]; }
 
 export interface MonthlyStatisticsData {

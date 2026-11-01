@@ -1,27 +1,28 @@
+import { t, getLocale, getLanguage } from "../i18n";
 import type { SplitMode, Split } from "../api/types";
 export function cents(value: string): number {
   const normalized = value.trim().replace(",", ".");
   if (!/^\d+(\.\d{1,2})?$/.test(normalized))
-    throw new Error("Inserisci un importo valido, con massimo due decimali.");
+    throw new Error(t("Inserisci un importo valido, con massimo due decimali."));
   const [whole, fraction = ""] = normalized.split(".");
   const amount = BigInt(whole) * 100n + BigInt(fraction.padEnd(2, "0"));
   if (amount > BigInt(Number.MAX_SAFE_INTEGER))
-    throw new Error("Importo troppo grande.");
+    throw new Error(t("Importo troppo grande."));
   return Number(amount);
 }
 export function decimal(value: number) {
-  return `${Math.trunc(value / 100)},${String(Math.abs(value % 100)).padStart(2, "0")}`;
+  return `${Math.trunc(value / 100)}${getLanguage() === "it" ? "," : "."}${String(Math.abs(value % 100)).padStart(2, "0")}`;
 }
 export function money(value: number, currency = "EUR", sign = false) {
   if (!validCurrency(currency)) {
-    const amount = new Intl.NumberFormat("it-IT", {
+    const amount = new Intl.NumberFormat(getLocale(), {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
       signDisplay: sign ? "exceptZero" : "auto",
     }).format(value / 100);
     return amount + (currency ? " " + currency : "");
   }
-  return new Intl.NumberFormat("it-IT", {
+  return new Intl.NumberFormat(getLocale(), {
     style: "currency",
     currency,
     signDisplay: sign ? "exceptZero" : "auto",
@@ -33,11 +34,12 @@ export function splitAmounts(
   mode: SplitMode,
   participants: number[],
   values: Record<number, string>,
+  currency = "EUR",
 ): Split[] {
   const ids = [...participants].sort((a, b) => a - b);
-  if (!ids.length) throw new Error("Seleziona almeno una persona.");
+  if (!ids.length) throw new Error(t("Seleziona almeno una persona."));
   if (mode === "single") {
-    if (ids.length !== 1) throw new Error("Scegli una sola persona.");
+    if (ids.length !== 1) throw new Error(t("Scegli una sola persona."));
     return [{ user_id: ids[0], amount_cents: amount }];
   }
   if (mode === "equal") {
@@ -54,12 +56,12 @@ export function splitAmounts(
       amount_cents: cents(values[id] ?? "0"),
     }));
     if (splits.reduce((sum, s) => sum + s.amount_cents, 0) !== amount)
-      throw new Error(`Le quote devono totalizzare ${money(amount)}.`);
+      throw new Error(t("Le quote devono totalizzare {0}.", {0: money(amount, currency)}));
     return splits;
   }
   const parts = ids.map((id) => ({ id, percent: cents(values[id] ?? "0") }));
   if (parts.reduce((sum, p) => sum + p.percent, 0) !== 10000)
-    throw new Error("Le percentuali devono totalizzare 100%.");
+    throw new Error(t("Le percentuali devono totalizzare 100%."));
   const shares = parts.map((p) => ({
     user_id: p.id,
     amount_cents: Number((BigInt(amount) * BigInt(p.percent)) / 10000n),
@@ -95,7 +97,7 @@ export function today(instant = new Date()) {
 }
 export const dateLabel = (date: string | null) =>
   date
-    ? new Intl.DateTimeFormat("it-IT", {
+    ? new Intl.DateTimeFormat(getLocale(), {
         day: "numeric",
         month: "short",
         year: "numeric",
@@ -105,11 +107,11 @@ export function recurrenceLabel(rule: string) {
   const freq = rule.match(/FREQ=(\w+)/)?.[1] ?? "MONTHLY";
   const count = Number(rule.match(/INTERVAL=(\d+)/)?.[1] ?? 1);
   const units: Record<string, string[]> = {
-    WEEKLY: ["settimana", "settimane"],
-    MONTHLY: ["mese", "mesi"],
-    YEARLY: ["anno", "anni"],
+    WEEKLY: [t("settimana"), t("settimane")],
+    MONTHLY: [t("mese"), t("mesi")],
+    YEARLY: [t("anno"), t("anni")],
   };
   return count === 1
-    ? "Ogni " + (units[freq]?.[0] ?? "mese")
-    : `Ogni ${count} ${units[freq]?.[1] ?? "mesi"}`;
+    ? t("Ogni ") + (units[freq]?.[0] ?? t("mese"))
+    : t("Ogni {0} {1}", {0: count, 1: units[freq]?.[1] ?? t("mesi")});
 }

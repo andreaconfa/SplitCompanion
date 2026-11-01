@@ -1,0 +1,29 @@
+configuration:
+  timezone:
+    name: Timezone
+    description: IANA timezone for subscription charges and scheduled backups, for example Europe/London.
+  allow_http:
+    name: Allow HTTP
+    description: Enable only for a trusted LAN. Disable when using an external HTTPS proxy.
+  public_origin:
+    name: Public origin
+    description: Exact external HTTPS URL, without a path or trailing slash.
+  trusted_proxy_ips:
+    name: Trusted proxy IPs
+    description: Comma-separated proxy addresses or specific CIDRs. Leave empty for direct LAN access.
+  mfa_required:
+    name: Require two-factor authentication
+  push_enabled:
+    name: Enable web push
+  push_vapid_subject:
+    name: Push contact
+    description: An operator-controlled mailto contact or HTTPS URL.
+  backup_hour:
+    name: Daily backup hour
+  backup_retention:
+    name: Daily backups to keep
+  initial_setup_code:
+    name: Initial setup code
+    description: Random 32–128-character code from your password manager. Use once in the web setup within 30 minutes, then clear this field.
+network:
+  8000/tcp: HTTP web app and API; configure external HTTPS for PWA or Internet access.

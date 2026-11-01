@@ -3,9 +3,13 @@ self.addEventListener('push', event => {
   let payload = {};
   try { payload = event.data ? event.data.json() : {}; } catch (_) { /* generic fallback */ }
   if (!payload || typeof payload !== 'object') payload = {};
+  const italian = payload.language === 'it';
   const url = typeof payload.url === 'string' && /^\/expenses\/\d+$/.test(payload.url) ? payload.url : '/profile';
   event.waitUntil(self.registration.showNotification('Split Companion', {
-    body: url === '/profile' ? 'Le notifiche su questo dispositivo sono attive.' : 'Una nuova spesa ti coinvolge.',
+    body: url === '/profile'
+      ? (italian ? 'Le notifiche su questo dispositivo sono attive.' : 'Notifications are enabled on this device.')
+      : (italian ? 'Una nuova spesa ti coinvolge.' : 'A new expense involves you.'),
+    lang: italian ? 'it' : 'en',
     icon: '/icon-192.png', badge: '/icon-192.png',
     tag: typeof payload.tag === 'string' ? payload.tag.slice(0, 100) : 'split-update',
     data: {url},

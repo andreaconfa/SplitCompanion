@@ -1,3 +1,5 @@
+import { t } from "../i18n";
+import { useLanguage } from "../i18n/react";
 import { Person } from "../components/Person";
 import { CategoryEditor } from "../components/Categories";
 import { useState } from "react";
@@ -28,6 +30,7 @@ import {
 import { dateLabel } from "../utils/money";
 import { filterLegacy } from "../utils/history";
 export default function Expenses() {
+  useLanguage();
   const { users, groups } = useData();
   const subscriptions = useApi<Subscription[]>("/subscriptions");
   const [filters, setFilters] = useState<Record<string, string>>({});
@@ -57,28 +60,23 @@ export default function Expenses() {
   return (
     <>
       <PageHead
-        eyebrow="SPESE CONDIVISE"
-        title="Movimenti"
-        description="Importi, pagamenti e storico."
-        action={<AddLink to="/expenses/new" label="Nuova" />}
+        eyebrow={t("SPESE CONDIVISE")}
+        title={t("Movimenti")}
+        description={t("Importi, pagamenti e storico.")}
+        action={<AddLink to="/expenses/new" label={t("Nuova")} />}
       />
       <div className="list-toolbar">
         <span>
           {expenses.isPending || (includeLegacy && legacy.isPending)
             ? "…"
-            : history.length}{" "}
-          movimenti
-        </span>
+            : history.length}{" "}{t("movimenti")}</span>
         <Button variant="secondary" onClick={() => setOpen(true)}>
-          <SlidersHorizontal size={17} /> Filtri{" "}
+          <SlidersHorizontal size={17} />{" "}{t("Filtri")}{" "}
           {count > 0 && <span className="count-badge">{count}</span>}
         </Button>
       </div>
       {(filters.payer_id || filters.subscription_id) && (
-        <p className="notice">
-          I movimenti legacy senza un pagante unico sono esclusi dai filtri per
-          pagante e abbonamento.
-        </p>
+        <p className="notice">{t("I movimenti legacy senza un pagante unico sono esclusi dai filtri per pagante e abbonamento.")}</p>
       )}
       <State
         pending={expenses.isPending || (includeLegacy && legacy.isPending)}
@@ -111,19 +109,17 @@ export default function Expenses() {
             <Empty
               title={
                 count
-                  ? "Nessuna spesa con questi filtri"
-                  : "Ancora nessuna spesa"
+                  ? t("Nessuna spesa con questi filtri")
+                  : t("Ancora nessuna spesa")
               }
               detail={
                 count
-                  ? "Prova ad ampliare la ricerca."
-                  : "Aggiungi una spesa per iniziare."
+                  ? t("Prova ad ampliare la ricerca.")
+                  : t("Aggiungi una spesa per iniziare.")
               }
               action={
                 count ? (
-                  <Button variant="secondary" onClick={() => setFilters({})}>
-                    Azzera filtri
-                  </Button>
+                  <Button variant="secondary" onClick={() => setFilters({})}>{t("Azzera filtri")}</Button>
                 ) : (
                   <AddLink to="/expenses/new" />
                 )
@@ -133,17 +129,15 @@ export default function Expenses() {
         </div>
       </State>
       {open && (
-        <Sheet title="Filtra le spese" onClose={() => setOpen(false)}>
+        <Sheet title={t("Filtra le spese")} onClose={() => setOpen(false)}>
           <div className="form-card">
-            <label>
-              Gruppo
-              <select
+            <label>{t("Gruppo")}<select
                 value={filters.group_id ?? ""}
                 onChange={(e) =>
                   setFilters({ ...filters, group_id: e.target.value })
                 }
               >
-                <option value="">Tutti i gruppi</option>
+                <option value="">{t("Tutti i gruppi")}</option>
                 {groups.map((g) => (
                   <option key={g.id} value={g.id}>
                     {g.name}
@@ -152,9 +146,7 @@ export default function Expenses() {
               </select>
             </label>
             <div className="two-fields">
-              <label>
-                Dal
-                <input
+              <label>{t("Dal")}<input
                   type="date"
                   value={filters.date_from ?? ""}
                   onChange={(e) =>
@@ -162,9 +154,7 @@ export default function Expenses() {
                   }
                 />
               </label>
-              <label>
-                Al
-                <input
+              <label>{t("Al")}<input
                   type="date"
                   value={filters.date_to ?? ""}
                   min={filters.date_from}
@@ -175,8 +165,8 @@ export default function Expenses() {
               </label>
             </div>
             {[
-              ["payer_id", "Pagato da"],
-              ["participant_id", "Persona coinvolta"],
+              ["payer_id", t("Pagato da")],
+              ["participant_id", t("Persona coinvolta")],
             ].map(([key, label]) => (
               <label key={key}>
                 {label}
@@ -186,7 +176,7 @@ export default function Expenses() {
                     setFilters({ ...filters, [key]: e.target.value })
                   }
                 >
-                  <option value="">Tutte le persone</option>
+                  <option value="">{t("Tutte le persone")}</option>
                   {users.map((u) => (
                     <option key={u.id} value={u.id}>
                       {u.display_name}
@@ -195,28 +185,24 @@ export default function Expenses() {
                 </select>
               </label>
             ))}
-            <label>
-              Origine
-              <select
+            <label>{t("Origine")}<select
                 value={filters.source ?? ""}
                 onChange={(e) =>
                   setFilters({ ...filters, source: e.target.value })
                 }
               >
-                <option value="">Tutte</option>
+                <option value="">{t("Tutte")}</option>
                 <option value="NATIVE">Split Companion</option>
                 <option value="SPLITWISE">Splitwise</option>
               </select>
             </label>
-            <label>
-              Abbonamento
-              <select
+            <label>{t("Abbonamento")}<select
                 value={filters.subscription_id ?? ""}
                 onChange={(e) =>
                   setFilters({ ...filters, subscription_id: e.target.value })
                 }
               >
-                <option value="">Tutti</option>
+                <option value="">{t("Tutti")}</option>
                 {subscriptions.data?.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
@@ -226,10 +212,8 @@ export default function Expenses() {
             </label>
             <ErrorBox error={subscriptions.error} />
             <div className="form-footer">
-              <Button variant="secondary" onClick={() => setFilters({})}>
-                Azzera
-              </Button>
-              <Button onClick={() => setOpen(false)}>Mostra risultati</Button>
+              <Button variant="secondary" onClick={() => setFilters({})}>{t("Azzera")}</Button>
+              <Button onClick={() => setOpen(false)}>{t("Mostra risultati")}</Button>
             </div>
           </div>
         </Sheet>
@@ -238,13 +222,14 @@ export default function Expenses() {
   );
 }
 export function ExpenseDetail() {
+  useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
   const { users, groups } = useData();
   const expense = useApi<Expense>("/expenses/" + id);
   const action = useAction(async () => send("/expenses/" + id, "DELETE"));
   const name = (uid: number) =>
-    users.find((u) => u.id === uid)?.display_name ?? "Utente";
+    users.find((u) => u.id === uid)?.display_name ?? t("Utente");
   return (
     <State pending={expense.isPending} error={expense.error}>
       {expense.data && (
@@ -253,8 +238,8 @@ export function ExpenseDetail() {
             title={expense.data.description}
             eyebrow={
               expense.data.source === "SPLITWISE"
-                ? "IMPORTATA DA SPLITWISE"
-                : "SPESA CONDIVISA"
+                ? t("IMPORTATA DA SPLITWISE")
+                : t("SPESA CONDIVISA")
             }
             back={"/groups/" + expense.data.group_id + "?tab=expenses"}
             description={
@@ -268,8 +253,7 @@ export function ExpenseDetail() {
               value={expense.data.amount_cents}
               currency={expense.data.currency}
             />
-            <p>
-              Pagato da <strong><Person userId={expense.data.paid_by_user_id} name={name(expense.data.paid_by_user_id)} small /></strong>
+            <p>{t("Pagato da")}{" "}<strong><Person userId={expense.data.paid_by_user_id} name={name(expense.data.paid_by_user_id)} small /></strong>
             </p>
             <span>{dateLabel(expense.data.expense_date)}</span>
           </div>
@@ -277,18 +261,16 @@ export function ExpenseDetail() {
             <Link
               className="notice"
               to={"/subscriptions/" + expense.data.subscription_id}
-            >
-              Spesa generata da un abbonamento. Apri il dettaglio →
-            </Link>
+            >{t("Spesa generata da un abbonamento. Apri il dettaglio →")}</Link>
           )}
-          <Section title="Come è stata divisa">
+          <Section title={t("Come è stata divisa")}>
             <div className="card">
               {expense.data.splits.map((split) => (
                 <div key={split.user_id} className="list-row">
 
                   <div className="row-main">
                     <strong><Person userId={split.user_id} name={name(split.user_id)} small /></strong>
-                    <span>Quota della spesa</span>
+                    <span>{t("Quota della spesa")}</span>
                   </div>
                   <Money
                     value={split.amount_cents}
@@ -299,7 +281,7 @@ export function ExpenseDetail() {
             </div>
           </Section>
           {expense.data.notes && (
-            <Section title="Note">
+            <Section title={t("Note")}>
               <div className="card form-card">
                 <p className="pre-line">{expense.data.notes}</p>
               </div>
@@ -312,15 +294,14 @@ export function ExpenseDetail() {
                 className="btn btn-secondary"
                 to={"/expenses/" + id + "/edit"}
               >
-                <Pencil size={16} /> Modifica
-              </Link>
+                <Pencil size={16} />{" "}{t("Modifica")}</Link>
               <Button
                 variant="danger"
                 disabled={action.isPending}
                 onClick={async () => {
                   if (
                     confirm(
-                      "Eliminare questa spesa? I saldi saranno ricalcolati.",
+                      t("Eliminare questa spesa? I saldi saranno ricalcolati."),
                     )
                   ) {
                     try {
@@ -334,14 +315,11 @@ export function ExpenseDetail() {
                   }
                 }}
               >
-                <Trash2 size={17} /> Elimina
-              </Button>
+                <Trash2 size={17} />{" "}{t("Elimina")}</Button>
             </div>
           ) : (
             <div className="notice">
-              <Archive size={18} /> Lo storico importato è protetto. Puoi
-              annullare l’intero import dalla gestione importazioni.
-            </div>
+              <Archive size={18} />{" "}{t("Lo storico importato è protetto. Puoi annullare l’intero import dalla gestione importazioni.")}</div>
           )}
         </>
       )}
@@ -349,6 +327,7 @@ export function ExpenseDetail() {
   );
 }
 export function LegacyDetail() {
+  useLanguage();
   const { id } = useParams();
   const query = useApi<Legacy>("/legacy/" + id);
   const { users } = useData();
@@ -357,7 +336,7 @@ export function LegacyDetail() {
       {query.data && (
         <>
           <PageHead
-            eyebrow="STORICO SPLITWISE"
+            eyebrow={t("STORICO SPLITWISE")}
             title={query.data.description}
             back={"/groups/" + query.data.group_id + "?tab=expenses"}
             description={dateLabel(query.data.date)}
@@ -369,13 +348,10 @@ export function LegacyDetail() {
               value={query.data.cost_cents}
               currency={query.data.currency}
             />
-            <p>Movimento legacy importato</p>
+            <p>{t("Movimento legacy importato")}</p>
           </div>
-          <p className="notice">
-            Questa transazione conserva i saldi originali di Splitwise, anche
-            quando non è possibile identificare un singolo pagante.
-          </p>
-          <Section title="Effetto sui saldi">
+          <p className="notice">{t("Questa transazione conserva i saldi originali di Splitwise, anche quando non è possibile identificare un singolo pagante.")}</p>
+          <Section title={t("Effetto sui saldi")}>
             <div className="card">
               {query.data.entries.map((entry) => (
                 <div key={entry.user_id} className="list-row">
@@ -385,10 +361,10 @@ export function LegacyDetail() {
                     </strong>
                     <span>
                       {entry.balance_delta_cents > 0
-                        ? "Credito"
+                        ? t("Credito")
                         : entry.balance_delta_cents < 0
-                          ? "Debito"
-                          : "In pari"}
+                          ? t("Debito")
+                          : t("In pari")}
                     </span>
                   </div>
                   <Money

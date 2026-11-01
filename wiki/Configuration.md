@@ -6,7 +6,7 @@ generates an instance secret and stores it in `data/secret.key`.
 
 | Compose variable | Default | Purpose |
 | --- | --- | --- |
-| `SPLIT_COMPANION_IMAGE` | `ghcr.io/andreaconfa/splitcompanion:1.2.0-rc.4` | Official image; pin a release version or digest |
+| `SPLIT_COMPANION_IMAGE` | `ghcr.io/andreaconfa/splitcompanion:1.2.0-rc.5` | Official image; pin a release version or digest |
 | `SPLIT_COMPANION_DATA_DIR` | `./data` | Existing persistent host directory, owned by UID/GID 10001 |
 | `SPLIT_COMPANION_BACKUP_DIR` | `./backups` | Existing host backup directory, owned by UID/GID 10001 |
 | `SPLIT_COMPANION_BIND` | `127.0.0.1` | Host interface on which to publish the port |
@@ -59,3 +59,22 @@ supported. Test a full restore on your chosen storage before relying on backups.
   Reload and inspect transaction history before repeating financial operations.
 - **Newer database schema:** use a compatible image or a verified restore. Do not
   delete the database to bypass the check.
+
+## Language and default currency
+
+The web/PWA starts in English. Choose **English** or **Italiano** under **Settings →
+Appearance → Language**. The preference stays in that browser; the native iOS
+companion has its own setting. User-entered names, descriptions and imported data
+are never translated. Date and number formatting follow the interface language;
+the server timezone continues to control recurring charges and backup scheduling.
+
+Administrators choose the default currency under **Settings → Administration** in the web app
+(**Server administration** in the native iOS app).
+The initial default is EUR. Supported defaults use two decimal places:
+AED, AUD, BRL, CAD, CHF, CNY, CZK, DKK, EUR, GBP, HKD, HUF, ILS, INR, MXN, NOK, NZD,
+PLN, RON, SEK, SGD, TRY, USD and ZAR. The choice is stored in the database and included
+in backups. It is proposed for new expenses, subscriptions and settlements.
+
+Changing the default does not convert, relabel or rewrite existing records.
+Recurring charges keep their subscription currency, and balances remain separate
+for each currency. Language and currency are independent settings.

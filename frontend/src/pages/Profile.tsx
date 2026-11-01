@@ -1,3 +1,5 @@
+import { t } from "../i18n";
+import { LanguageSelector, useLanguage } from "../i18n/react";
 import { AvatarEditor } from "../components/AvatarEditor";
 import { Person, PeopleDisplaySelector } from "../components/Person";
 import { PasswordSettings } from "../components/PasswordSettings";
@@ -31,8 +33,10 @@ import {
   Section,
 } from "../components/ui";
 import "./Profile.css";
+import { DefaultCurrencySettings } from "../components/DefaultCurrencySettings";
 
 export default function Profile() {
+  useLanguage();
   const { session, logout } = useSession();
   const meta = useApi<{server_version: string; source_available?: boolean}>("/meta");
   const [error, setError] = useState("");
@@ -40,23 +44,23 @@ export default function Profile() {
   return (
     <div className="profile-settings">
       <PageHead
-        eyebrow="IL TUO SPAZIO"
-        title="Impostazioni"
-        description="Account, sicurezza e preferenze."
+        eyebrow={t("IL TUO SPAZIO")}
+        title={t("Impostazioni")}
+        description={t("Account, sicurezza e preferenze.")}
       />
-      <Section title="Account">
+      <Section title={t("Account")}>
         <div className="settings-group">
           <div className="settings-identity">
             <h2><Person user={session.user} forceName /></h2>
             <div className="settings-identity-meta">
               <span>@{session.user.username}</span>
-              <span>{session.user.is_admin ? "Amministratore" : "Membro"}</span>
+              <span>{session.user.is_admin ? t("Amministratore") : t("Membro")}</span>
             </div>
           </div>
           <details className="settings-disclosure">
             <summary className="settings-row">
               <span className="settings-icon"><CircleUserRound size={20} /></span>
-              <span className="settings-row-main"><strong>Foto profilo</strong><span>La tua foto, su tutti i dispositivi</span></span>
+              <span className="settings-row-main"><strong>{t("Foto profilo")}</strong><span>{t("La tua foto, su tutti i dispositivi")}</span></span>
               <ChevronRight className="settings-chevron" size={18} />
             </summary>
             <div className="settings-detail"><AvatarEditor user={session.user} /></div>
@@ -64,53 +68,55 @@ export default function Profile() {
           <details className="settings-disclosure">
             <summary className="settings-row">
               <span className="settings-icon"><LockKeyhole size={20} /></span>
-              <span className="settings-row-main"><strong>Password e sicurezza</strong><span>Password e verifica in due passaggi</span></span>
+              <span className="settings-row-main"><strong>{t("Password e sicurezza")}</strong><span>{t("Password e verifica in due passaggi")}</span></span>
               <ChevronRight className="settings-chevron" size={18} />
             </summary>
             <div className="settings-detail settings-security"><PasswordSettings /><MfaSettings /></div>
           </details>
           <Link className="settings-row" to="/subscriptions">
             <span className="settings-icon"><CalendarClock size={20} /></span>
-            <span className="settings-row-main"><strong>Gestisci abbonamenti</strong><span>Scadenze e spese ricorrenti</span></span>
+            <span className="settings-row-main"><strong>{t("Gestisci abbonamenti")}</strong><span>{t("Scadenze e spese ricorrenti")}</span></span>
             <ChevronRight className="settings-chevron" size={18} />
           </Link>
         </div>
       </Section>
-      <Section title="Aspetto">
+      <Section title={t("Aspetto")}>
         <div className="settings-group settings-appearance">
+          <div className="settings-preference"><LanguageSelector /></div>
           <div className="settings-preference"><PeopleDisplaySelector /></div>
           <div className="settings-preference"><ThemeSelector /></div>
           <div className="settings-preference"><AccentSelector /></div>
         </div>
-        <p className="settings-footnote">Personalizza l’aspetto su questo dispositivo.</p>
+        <p className="settings-footnote">{t("Personalizza l’aspetto su questo dispositivo.")}</p>
       </Section>
       <div className="settings-notifications"><PushSettings /></div>
       {session.user.is_admin && (
-        <Section title="Amministrazione">
+        <Section title={t("Amministrazione")}>
+          <DefaultCurrencySettings />
           <div className="settings-group">
             <Link className="settings-row" to="/admin/categories">
               <span className="settings-icon"><Tags size={20} /></span>
-              <span className="settings-row-main"><strong>Categorie</strong><span>Nomi e icone per tutte le spese</span></span>
+              <span className="settings-row-main"><strong>{t("Categorie")}</strong><span>{t("Nomi e icone per tutte le spese")}</span></span>
               <ChevronRight className="settings-chevron" size={18} />
             </Link>
             <Link className="settings-row" to="/admin/users">
               <span className="settings-icon"><Users size={20} /></span>
-              <span className="settings-row-main"><strong>Gestione utenti</strong><span>Persone, accessi e password</span></span>
+              <span className="settings-row-main"><strong>{t("Gestione utenti")}</strong><span>{t("Persone, accessi e password")}</span></span>
               <ChevronRight className="settings-chevron" size={18} />
             </Link>
             <Link className="settings-row" to="/admin/imports">
               <span className="settings-icon"><Upload size={20} /></span>
-              <span className="settings-row-main"><strong>Importa da Splitwise</strong><span>Porta con te il vostro storico</span></span>
+              <span className="settings-row-main"><strong>{t("Importa da Splitwise")}</strong><span>{t("Porta con te il vostro storico")}</span></span>
               <ChevronRight className="settings-chevron" size={18} />
             </Link>
           </div>
         </Section>
       )}
-      <Section title="Informazioni">
+      <Section title={t("Informazioni")}>
         <div className="settings-group">
-          <div className="settings-row settings-version"><strong>Versione</strong><span>{meta.data?.server_version ?? "—"}</span></div>
-          {meta.data?.source_available && <a className="settings-row" href="/api/source"><strong>Codice sorgente · AGPL-3.0</strong><ChevronRight size={18} /></a>}
-          <div className="settings-about"><strong>Split Companion</strong><p>Il tuo server, le tue spese.</p><p>Accesso protetto. I tuoi dati restano sulla vostra installazione.</p></div>
+          <div className="settings-row settings-version"><strong>{t("Versione")}</strong><span>{meta.data?.server_version ?? "—"}</span></div>
+          {meta.data?.source_available && <a className="settings-row" href="/api/source"><strong>{t("Codice sorgente · AGPL-3.0")}</strong><ChevronRight size={18} /></a>}
+          <div className="settings-about"><strong>Split Companion</strong><p>{t("Il tuo server, le tue spese.")}</p><p>{t("Accesso protetto. I tuoi dati restano sulla vostra installazione.")}</p></div>
         </div>
       </Section>
       <div className="settings-session">
@@ -128,30 +134,29 @@ export default function Profile() {
             }
           }}
         >
-          <LogOut size={18} /> Esci
-        </Button>
+          <LogOut size={18} />{" "}{t("Esci")}</Button>
       </div>
     </div>
   );
 }
 
 export function AdminUsers() {
+  useLanguage();
   const { users } = useData();
   const { session } = useSession();
   const [edit, setEdit] = useState<User | null | false>(false);
   if (!session.user.is_admin)
-    return <ErrorBox error="Questa pagina è riservata agli amministratori." />;
+    return <ErrorBox error={t("Questa pagina è riservata agli amministratori.")} />;
   return (
     <>
       <PageHead
-        eyebrow="AMMINISTRAZIONE"
-        title="Le persone"
-        description="Gestisci chi può accedere a Split Companion."
+        eyebrow={t("AMMINISTRAZIONE")}
+        title={t("Le persone")}
+        description={t("Gestisci chi può accedere a Split Companion.")}
         back="/profile"
         action={
           <Button onClick={() => setEdit(null)}>
-            <Plus size={18} /> Utente
-          </Button>
+            <Plus size={18} />{" "}{t("Utente")}</Button>
         }
       />
       <div className="card">
@@ -161,13 +166,13 @@ export function AdminUsers() {
               <strong><Person user={user} /></strong>
               <span>
                 @{user.username}
-                {!user.is_active ? " · Disabilitato" : ""}
-                {user.is_admin ? " · Amministratore" : ""}
+                {!user.is_active ? t(" · Disabilitato") : ""}
+                {user.is_admin ? t(" · Amministratore") : ""}
               </span>
             </div>
             <button
               className="icon-button"
-              aria-label={"Modifica " + user.display_name}
+              aria-label={t("Modifica ") + user.display_name}
               onClick={() => setEdit(user)}
             >
               <Pencil size={18} />
@@ -188,6 +193,7 @@ function UserForm({
   user: User | null;
   onClose: () => void;
 }) {
+  useLanguage();
   const [username, setUsername] = useState(user?.username ?? "");
   const [name, setName] = useState(user?.display_name ?? "");
   const [password, setPassword] = useState("");
@@ -220,14 +226,12 @@ function UserForm({
   };
   return (
     <Sheet
-      title={user ? "Modifica utente" : "Aggiungi una persona"}
+      title={user ? t("Modifica utente") : t("Aggiungi una persona")}
       onClose={onClose}
     >
       {user && <div className="form-card"><AvatarEditor user={user} /></div>}
       <form className="form-card" onSubmit={submit}>
-        <label>
-          Username
-          <input
+        <label>{t("Username")}<input
             value={username}
             autoComplete="off"
             required
@@ -238,9 +242,7 @@ function UserForm({
             onChange={(e) => setUsername(e.target.value)}
           />
         </label>
-        <label>
-          Nome visualizzato
-          <input
+        <label>{t("Nome visualizzato")}<input
             value={name}
             required
             maxLength={100}
@@ -249,8 +251,8 @@ function UserForm({
         </label>
         <label>
           {user
-            ? "Nuova password (lascia vuoto per conservarla)"
-            : "Password iniziale"}
+            ? t("Nuova password (lascia vuoto per conservarla)")
+            : t("Password iniziale")}
           <input
             type="password"
             value={password}
@@ -260,31 +262,26 @@ function UserForm({
             onChange={(e) => setPassword(e.target.value)}
           />
         </label>
-        <p className="field-hint">
-          Almeno 10 caratteri. Condividi la password in modo sicuro.
-        </p>
+        <p className="field-hint">{t("Almeno 10 caratteri. Condividi la password in modo sicuro.")}</p>
         <label className="checkbox-line">
           <input
             type="checkbox"
             checked={admin}
             onChange={(e) => setAdmin(e.target.checked)}
           />
-          <ShieldCheck size={18} /> Amministratore
-        </label>
+          <ShieldCheck size={18} />{" "}{t("Amministratore")}</label>
         {user && (
           <label className="checkbox-line">
             <input
               type="checkbox"
               checked={active}
               onChange={(e) => setActive(e.target.checked)}
-            />{" "}
-            Utente attivo
-          </label>
+            />{" "}{t("Utente attivo")}</label>
         )}
         <ErrorBox error={action.error} />
         <Busy
           busy={action.isPending}
-          label={user ? "Salva modifiche" : "Crea utente"}
+          label={user ? t("Salva modifiche") : t("Crea utente")}
         />
       </form>
     </Sheet>

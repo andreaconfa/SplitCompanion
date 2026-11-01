@@ -13,12 +13,12 @@ private tags, inspect refs/remotes and push only the intended branch.
    layers. Scan for secrets and personal references. Do not add real exports,
    `.env`, databases, backups, certificates or native iOS source. Use synthetic demo data.
 3. Run Python tests, frontend tests, TypeScript, the web build and
-   `scripts/container-smoke.py` on a Linux amd64 host with local storage.
+   `scripts/container-smoke.py` on both Linux amd64 and arm64 hosts with local storage.
    The smoke test creates and destroys only its own new temporary directories.
 4. Update `backend/app/version.py`, image tags and documentation consistently.
    The workflow accepts `vX.Y.Z` or `vX.Y.Z-rc.N` and rejects tag/version mismatches.
 5. Publish a GitHub release on the verified commit. `release.yml` tests and scans
-   the build, starts the Linux amd64 image and publishes its version tag at `ghcr.io/<owner>/<repository>:<version>`.
+   the build, starts both Linux amd64 and arm64 images and publishes its version tag at `ghcr.io/<owner>/<repository>:<version>`.
 6. Release attachments use `env.example` for the configuration template; copy it
    to `.env` when installing. The source tree keeps `.env.example`. GitHub rewrites
    attachment names that start with a dot, so checksums must use the attachment name.
@@ -33,8 +33,8 @@ Repository visibility and package visibility are separate settings.
 ## Manual build and attachments
 
 ```sh
-docker build --platform linux/amd64 -t splitcompanion:1.2.0-rc.4 .
-docker save -o splitcompanion-amd64.tar splitcompanion:1.2.0-rc.4
+docker build --platform linux/amd64 -t splitcompanion:1.2.0-rc.5 .
+docker save -o splitcompanion-amd64.tar splitcompanion:1.2.0-rc.5
 python3 scripts/make-source-archive.py --output splitcompanion-source.tar.gz
 sha256sum splitcompanion-amd64.tar splitcompanion-source.tar.gz > SHA256SUMS
 ```
@@ -57,3 +57,7 @@ The command creates a new output directory and adjusts links for GitHub Wiki.
 It does not create remote repositories or publish content. Commit those files to
 your wiki repository after enabling it. Update the wiki with each release and
 check links on the destination service.
+
+The release workflow also tests and publishes the Home Assistant variant using
+`<version>-homeassistant`. Keep its manifest version in sync with the server release.
+The same public package hosts both multi-architecture manifests.

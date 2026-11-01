@@ -167,7 +167,7 @@ def test_scope_coverage_currencies_and_occurrences(client, monkeypatch):
         legacy_nonpositive_count=2,
     )
     assert [r["total_cents"] for r in d["categories"]] == [500, 399, 201]
-    assert d["categories"][1]["name"] == "Senza categoria"
+    assert d["categories"][1]["name"] == "Uncategorized"
     assert sum(r["total_cents"] for r in d["groups"]) == 1100
     assert len(d["daily"]) == 31
     assert d["daily"][0]["cumulative_cents"] == 0

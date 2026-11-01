@@ -1,3 +1,5 @@
+import { t } from "../i18n";
+import { useLanguage } from "../i18n/react";
 import { Person } from "../components/Person";
 import { CategoryBadge } from "../components/Categories";
 import { useState, type FormEvent } from "react";
@@ -36,6 +38,7 @@ import {
   today,
 } from "../utils/money";
 export default function Subscriptions() {
+  useLanguage();
   const { groups, users } = useData();
   const { session } = useSession();
   const [group, setGroup] = useState("");
@@ -47,16 +50,14 @@ export default function Subscriptions() {
   return (
     <>
       <PageHead
-        eyebrow="LA ROUTINE, SENZA PENSIERI"
-        title="Abbonamenti"
-        description="Un’unica casa per le spese che si ripetono."
-        action={<AddLink to="/subscriptions/new" label="Nuovo" />}
+        eyebrow={t("LA ROUTINE, SENZA PENSIERI")}
+        title={t("Abbonamenti")}
+        description={t("Un’unica casa per le spese che si ripetono.")}
+        action={<AddLink to="/subscriptions/new" label={t("Nuovo")} />}
       />
       <div className="card form-card">
-        <label>
-          Gruppo
-          <select value={group} onChange={(e) => setGroup(e.target.value)}>
-            <option value="">Tutti i gruppi</option>
+        <label>{t("Gruppo")}<select value={group} onChange={(e) => setGroup(e.target.value)}>
+            <option value="">{t("Tutti i gruppi")}</option>
             {groups.map((g) => (
               <option key={g.id} value={g.id}>
                 {g.name}
@@ -69,11 +70,9 @@ export default function Subscriptions() {
             type="checkbox"
             checked={showPaused}
             onChange={(e) => setShowPaused(e.target.checked)}
-          />{" "}
-          Includi abbonamenti in pausa / terminati
-        </label>
+          />{" "}{t("Includi abbonamenti in pausa / terminati")}</label>
       </div>
-      <Section title="Le vostre ricorrenze">
+      <Section title={t("Le vostre ricorrenze")}>
         <State pending={subs.isPending} error={subs.error}>
           <div className="card">
             {subs.data?.filter((s) => showPaused || s.active).length ? (
@@ -88,10 +87,10 @@ export default function Subscriptions() {
                 ))
             ) : (
               <Empty
-                title="Una cosa in meno da ricordare"
-                detail="Crea il primo abbonamento condiviso."
+                title={t("Una cosa in meno da ricordare")}
+                detail={t("Crea il primo abbonamento condiviso.")}
                 action={
-                  <AddLink to="/subscriptions/new" label="Crea abbonamento" />
+                  <AddLink to="/subscriptions/new" label={t("Crea abbonamento")} />
                 }
               />
             )}
@@ -100,22 +99,16 @@ export default function Subscriptions() {
       </Section>
       {session.user.is_admin && (
         <div className="card form-card">
-          <h3>Controlla le scadenze</h3>
-          <p className="muted">
-            Le scadenze vengono generate automaticamente. Puoi avviare ora il
-            recupero di eventuali rinnovi mancanti.
-          </p>
+          <h3>{t("Controlla le scadenze")}</h3>
+          <p className="muted">{t("Le scadenze vengono generate automaticamente. Puoi avviare ora il recupero di eventuali rinnovi mancanti.")}</p>
           <Button
             variant="secondary"
             disabled={run.isPending}
             onClick={() => run.mutate(undefined)}
           >
-            <RefreshCw size={16} /> Genera scadenze dovute
-          </Button>
+            <RefreshCw size={16} />{" "}{t("Genera scadenze dovute")}</Button>
           {run.isSuccess && (
-            <p className="success-text" role="status">
-              Scadenze controllate. I conti sono aggiornati.
-            </p>
+            <p className="success-text" role="status">{t("Scadenze controllate. I conti sono aggiornati.")}</p>
           )}
           <ErrorBox error={run.error} />
         </div>
@@ -124,6 +117,7 @@ export default function Subscriptions() {
   );
 }
 export function SubscriptionDetail() {
+  useLanguage();
   const { id } = useParams();
   const { users } = useData();
   const sub = useApi<Subscription>("/subscriptions/" + id);
@@ -139,7 +133,7 @@ export function SubscriptionDetail() {
       send("/subscriptions/" + id + suffix, method),
   );
   const name = (uid: number) =>
-    users.find((u) => u.id === uid)?.display_name ?? "Utente";
+    users.find((u) => u.id === uid)?.display_name ?? t("Utente");
   return (
     <State pending={sub.isPending} error={sub.error}>
       {sub.data && (
@@ -147,10 +141,10 @@ export function SubscriptionDetail() {
           <PageHead
             eyebrow={
               sub.data.deleted
-                ? "ABBONAMENTO TERMINATO"
+                ? t("ABBONAMENTO TERMINATO")
                 : sub.data.active
-                  ? "ABBONAMENTO ATTIVO"
-                  : "ABBONAMENTO IN PAUSA"
+                  ? t("ABBONAMENTO ATTIVO")
+                  : t("ABBONAMENTO IN PAUSA")
             }
             title={sub.data.name}
             back="/subscriptions"
@@ -162,17 +156,15 @@ export function SubscriptionDetail() {
             <p>{recurrenceLabel(sub.data.recurrence_rule)}</p>
             <span>
               {sub.data.deleted
-                ? "Terminato: lo storico e i crediti restano disponibili"
+                ? t("Terminato: lo storico e i crediti restano disponibili")
                 : sub.data.active
-                  ? "Prossimo: " + dateLabel(sub.data.next_occurrence_date)
-                  : "La generazione delle scadenze è sospesa"}
+                  ? t("Prossimo: ") + dateLabel(sub.data.next_occurrence_date)
+                  : t("La generazione delle scadenze è sospesa")}
             </span>
-            <p>
-              Pagato da <strong><Person userId={sub.data.paid_by_user_id} name={name(sub.data.paid_by_user_id)} small /></strong>
+            <p>{t("Pagato da")}{" "}<strong><Person userId={sub.data.paid_by_user_id} name={name(sub.data.paid_by_user_id)} small /></strong>
             </p>
-            <small>
-              Dal {dateLabel(sub.data.start_date)}
-              {sub.data.end_date ? " al " + dateLabel(sub.data.end_date) : ""}
+            <small>{t("Dal")}{" "}{dateLabel(sub.data.start_date)}
+              {sub.data.end_date ? t(" al ") + dateLabel(sub.data.end_date) : ""}
             </small>
           </div>
           {!sub.data.deleted && (
@@ -181,8 +173,7 @@ export function SubscriptionDetail() {
                 className="btn btn-secondary"
                 to={"/subscriptions/" + id + "/edit"}
               >
-                <Pencil size={16} /> Modifica
-              </Link>
+                <Pencil size={16} />{" "}{t("Modifica")}</Link>
               <Button
                 variant="secondary"
                 disabled={action.isPending}
@@ -194,7 +185,7 @@ export function SubscriptionDetail() {
                 }
               >
                 {sub.data.active ? <Pause size={17} /> : <Play size={17} />}{" "}
-                {sub.data.active ? "Pausa" : "Riprendi"}
+                {sub.data.active ? t("Pausa") : t("Riprendi")}
               </Button>
               <Button
                 variant="danger"
@@ -202,25 +193,20 @@ export function SubscriptionDetail() {
                 onClick={() => {
                   if (
                     confirm(
-                      "Terminare questo abbonamento? Lo storico e i crediti rimarranno disponibili.",
+                      t("Terminare questo abbonamento? Lo storico e i crediti rimarranno disponibili."),
                     )
                   )
                     action.mutate({ method: "DELETE", suffix: "" });
                 }}
               >
-                <Trash2 size={16} /> Termina
-              </Button>
+                <Trash2 size={16} />{" "}{t("Termina")}</Button>
             </div>
           )}
           <ErrorBox error={action.error} />
           {!sub.data.active && !sub.data.deleted && (
-            <p className="notice">
-              Riprendendo un abbonamento in pausa vengono recuperate anche le
-              scadenze trascorse. Se la data finale è passata, aggiornala prima
-              di riprendere.
-            </p>
+            <p className="notice">{t("Riprendendo un abbonamento in pausa vengono recuperate anche le scadenze trascorse. Se la data finale è passata, aggiornala prima di riprendere.")}</p>
           )}
-          <Section title="Suddivisione a ogni scadenza">
+          <Section title={t("Suddivisione a ogni scadenza")}>
             <div className="card">
               {sub.data.splits.map((split) => (
                 <div className="list-row" key={split.user_id}>
@@ -237,12 +223,11 @@ export function SubscriptionDetail() {
             </div>
           </Section>
           <Section
-            title="Anticipi e credito"
+            title={t("Anticipi e credito")}
             action={
               !sub.data.deleted && (
                 <Button onClick={() => setTransfer({ kind: "advances" })}>
-                  <ArrowUpRight size={16} /> Anticipo
-                </Button>
+                  <ArrowUpRight size={16} />{" "}{t("Anticipo")}</Button>
               )
             }
           >
@@ -255,25 +240,25 @@ export function SubscriptionDetail() {
 
                         <h3><Person userId={credit.user_id} name={name(credit.user_id)} small /></h3>
                       </div>
-                      <span className="pill">Credito</span>
+                      <span className="pill">{t("Credito")}</span>
                     </div>
                     <div className="credit-numbers">
                       <div>
-                        <span>Anticipato</span>
+                        <span>{t("Anticipato")}</span>
                         <Money
                           value={credit.advanced_cents}
                           currency={sub.data!.currency}
                         />
                       </div>
                       <div>
-                        <span>Utilizzato</span>
+                        <span>{t("Utilizzato")}</span>
                         <Money
                           value={credit.used_cents}
                           currency={sub.data!.currency}
                         />
                       </div>
                       <div>
-                        <span>Rimborsato</span>
+                        <span>{t("Rimborsato")}</span>
                         <Money
                           value={credit.refunded_cents}
                           currency={sub.data!.currency}
@@ -281,7 +266,7 @@ export function SubscriptionDetail() {
                       </div>
                     </div>
                     <div className="credit-remaining">
-                      <span>Credito residuo</span>
+                      <span>{t("Credito residuo")}</span>
                       <Money
                         value={credit.remaining_cents}
                         currency={sub.data!.currency}
@@ -297,9 +282,7 @@ export function SubscriptionDetail() {
                             userId: credit.user_id,
                           })
                         }
-                      >
-                        Aggiungi anticipo
-                      </Button>
+                      >{t("Aggiungi anticipo")}</Button>
                       <Button
                         variant="secondary"
                         disabled={credit.remaining_cents <= 0}
@@ -310,30 +293,27 @@ export function SubscriptionDetail() {
                           })
                         }
                       >
-                        <ArrowDownLeft size={16} /> Rimborso
-                      </Button>
+                        <ArrowDownLeft size={16} />{" "}{t("Rimborso")}</Button>
                     </div>
                     {credit.history.length > 0 && (
                       <details className="history-details">
-                        <summary>Storico del credito</summary>
+                        <summary>{t("Storico del credito")}</summary>
                         {credit.history.map((entry, index) => (
                           <div className="history-row" key={index}>
                             <div>
                               <strong>
                                 {entry.kind.includes("REFUND")
-                                  ? "Rimborso"
+                                  ? t("Rimborso")
                                   : entry.kind.includes("ADVANCE")
-                                    ? "Anticipo"
-                                    : "Credito utilizzato"}
+                                    ? t("Anticipo")
+                                    : t("Credito utilizzato")}
                               </strong>
                               <span>{dateLabel(entry.date)}</span>
                               {entry.expense_id && (
                                 <Link
                                   className="text-link"
                                   to={"/expenses/" + entry.expense_id}
-                                >
-                                  Apri spesa
-                                </Link>
+                                >{t("Apri spesa")}</Link>
                               )}
                             </div>
                             <Money
@@ -349,14 +329,14 @@ export function SubscriptionDetail() {
               ) : (
                 <div className="card">
                   <Empty
-                    title="Nessun anticipo registrato"
-                    detail="Un contributo oggi, meno pensieri ai prossimi rinnovi."
+                    title={t("Nessun anticipo registrato")}
+                    detail={t("Un contributo oggi, meno pensieri ai prossimi rinnovi.")}
                   />
                 </div>
               )}
             </State>
           </Section>
-          <Section title="Spese generate">
+          <Section title={t("Spese generate")}>
             <State pending={expenses.isPending} error={expenses.error}>
               <div className="card">
                 {expenses.data?.length ? (
@@ -369,14 +349,14 @@ export function SubscriptionDetail() {
                   ))
                 ) : (
                   <Empty
-                    title="Il prossimo rinnovo ti aspetta"
-                    detail="Le spese vengono create alla data della scadenza."
+                    title={t("Il prossimo rinnovo ti aspetta")}
+                    detail={t("Le spese vengono create alla data della scadenza.")}
                   />
                 )}
               </div>
             </State>
           </Section>
-          <Section title="Trasferimenti anticipati">
+          <Section title={t("Trasferimenti anticipati")}>
             <State pending={advances.isPending} error={advances.error}>
               <div className="card">
                 {advances.data?.length ? (
@@ -390,8 +370,8 @@ export function SubscriptionDetail() {
                         <span>
                           {dateLabel(item.settlement_date)} ·{" "}
                           {item.kind === "SUBSCRIPTION_REFUND"
-                            ? "Rimborso"
-                            : "Anticipo"}
+                            ? t("Rimborso")
+                            : t("Anticipo")}
                         </span>
                         {item.notes && <small>{item.notes}</small>}
                       </div>
@@ -402,7 +382,7 @@ export function SubscriptionDetail() {
                     </div>
                   ))
                 ) : (
-                  <Empty title="Nessun trasferimento" />
+                  <Empty title={t("Nessun trasferimento")} />
                 )}
               </div>
             </State>
@@ -434,6 +414,7 @@ function TransferForm({
   userId?: number;
   onClose: () => void;
 }) {
+  useLanguage();
   const { users } = useData();
   const participantIds =
     kind === "refunds"
@@ -466,10 +447,10 @@ function TransferForm({
       const parsed = cents(amount);
       if (!person || parsed <= 0)
         throw new Error(
-          "Scegli un partecipante e un importo maggiore di zero.",
+          t("Scegli un partecipante e un importo maggiore di zero."),
         );
       if (refund && parsed > remaining)
-        throw new Error("Il rimborso non può superare il credito residuo.");
+        throw new Error(t("Il rimborso non può superare il credito residuo."));
       setError("");
       await action.mutateAsync({
         user_id: person,
@@ -484,45 +465,42 @@ function TransferForm({
   };
   return (
     <Sheet
-      title={refund ? "Registra un rimborso" : "Aggiungi un anticipo"}
+      title={refund ? t("Registra un rimborso") : t("Aggiungi un anticipo")}
       onClose={onClose}
     >
       <form className="form-card" onSubmit={submit}>
         <p className="notice">
           {refund
-            ? "Il pagante restituisce parte del credito non utilizzato."
-            : "Registra il denaro già versato al pagante. Il credito verrà utilizzato sulle prossime quote."}
+            ? t("Il pagante restituisce parte del credito non utilizzato.")
+            : t("Registra il denaro già versato al pagante. Il credito verrà utilizzato sulle prossime quote.")}
         </p>
         <label>
-          {refund ? "Chi riceve il rimborso?" : "Chi ha anticipato?"}
+          {refund ? t("Chi riceve il rimborso?") : t("Chi ha anticipato?")}
           <select
             value={person}
             onChange={(e) => setPerson(Number(e.target.value))}
             required
           >
-            <option value="">Scegli una persona</option>
+            <option value="">{t("Scegli una persona")}</option>
             {participants.map((p) => (
               <option key={p.user_id} value={p.user_id}>
-                {users.find((u) => u.id === p.user_id)?.display_name ?? "Utente"}
+                {users.find((u) => u.id === p.user_id)?.display_name ?? t("Utente")}
               </option>
             ))}
           </select>
         </label>
         {refund && (
           <div className="split-summary">
-            <span>Credito disponibile</span>
+            <span>{t("Credito disponibile")}</span>
             <Money value={remaining} currency={subscription.currency} />
             <button
               type="button"
               className="text-link"
               onClick={() => setAmount(decimal(remaining))}
-            >
-              Tutto
-            </button>
+            >{t("Tutto")}</button>
           </div>
         )}
-        <label>
-          Importo ({subscription.currency})
+        <label>{t("Importo (")}{subscription.currency})
           <input
             inputMode="decimal"
             value={amount}
@@ -530,18 +508,14 @@ function TransferForm({
             required
           />
         </label>
-        <label>
-          Data del trasferimento
-          <input
+        <label>{t("Data del trasferimento")}<input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
             required
           />
         </label>
-        <label>
-          Note
-          <textarea
+        <label>{t("Note")}<textarea
             rows={2}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
@@ -550,7 +524,7 @@ function TransferForm({
         <ErrorBox error={error || action.error} />
         <Busy
           busy={action.isPending}
-          label={refund ? "Registra rimborso" : "Registra anticipo"}
+          label={refund ? t("Registra rimborso") : t("Registra anticipo")}
         />
       </form>
     </Sheet>

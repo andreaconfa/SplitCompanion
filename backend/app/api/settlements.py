@@ -39,6 +39,9 @@ def add_settlement(data: SettlementCreate, user: CurrentUser, s: DB):
     members_active(s, data.group_id, [data.paid_by_user_id, data.paid_to_user_id])
     if data.paid_by_user_id == data.paid_to_user_id:
         raise ValueError("Scegli due persone diverse.")
+    from app.services.instance_settings import apply_currency_default
+
+    apply_currency_default(s, data)
     t = Settlement(**data.model_dump(), created_by_user_id=user.id)
     s.add(t)
     s.flush()

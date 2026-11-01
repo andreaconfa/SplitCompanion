@@ -1,3 +1,5 @@
+import { t } from "../i18n";
+import { useLanguage } from "../i18n/react";
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Server, RefreshCw, CircleCheck, WifiOff, LoaderCircle } from 'lucide-react';
@@ -6,6 +8,7 @@ import { Sheet } from './ui';
 
 const labels = { checking: 'Verifica in corso', online: 'Disponibile', offline: 'Non raggiungibile' };
 export function ServerStatus() {
+  useLanguage();
   const [status, setStatus] = useState<Status>('checking');
   const [open, setOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -37,14 +40,14 @@ export function ServerStatus() {
     finally { setRefreshing(false); }
   };
   return <>
-    <button type="button" className={`glass-button server-status ${status}`} aria-label={`Server: ${labels[status]}`} title={`Server: ${labels[status]}`} onClick={() => setOpen(true)}><Server size={23} /></button>
-    {open && <Sheet title="Il tuo server" onClose={close}>
+    <button type="button" className={`glass-button server-status ${status}`} aria-label={t("Server: {0}", {0: t(labels[status])})} title={t("Server: {0}", {0: t(labels[status])})} onClick={() => setOpen(true)}><Server size={23} /></button>
+    {open && <Sheet title={t("Il tuo server")} onClose={close}>
       <div className="server-panel">
         <span className={`server-status-emblem ${status}`}><Server size={32} /></span>
         <h3>{location.hostname}</h3>
-        <p className={`server-state ${status}`} role="status">{status === 'checking' ? <LoaderCircle size={18} className="spin" /> : status === 'online' ? <CircleCheck size={18} /> : <WifiOff size={18} />}{labels[status]}</p>
-        {status === 'offline' && <p className="muted">Controlla la connessione o riprova tra poco.</p>}
-        <button type="button" className="btn btn-primary" disabled={refreshing} onClick={refresh}><RefreshCw size={18} className={refreshing ? 'spin' : ''} />{refreshing ? 'Aggiornamento…' : 'Aggiorna'}</button>
+        <p className={`server-state ${status}`} role="status">{status === 'checking' ? <LoaderCircle size={18} className="spin" /> : status === 'online' ? <CircleCheck size={18} /> : <WifiOff size={18} />}{t(labels[status])}</p>
+        {status === 'offline' && <p className="muted">{t("Controlla la connessione o riprova tra poco.")}</p>}
+        <button type="button" className="btn btn-primary" disabled={refreshing} onClick={refresh}><RefreshCw size={18} className={refreshing ? 'spin' : ''} />{refreshing ? t("Aggiornamento…") : t("Aggiorna")}</button>
       </div>
     </Sheet>}
   </>;

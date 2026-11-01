@@ -1,3 +1,5 @@
+import { t } from "../i18n";
+import { useLanguage } from "../i18n/react";
 import { useState } from "react";
 import {
   Tag,
@@ -71,6 +73,7 @@ export function CategoryIcon({
   iconKey?: string | null;
   size?: number;
 }) {
+  useLanguage();
   if (iconKey === "chatgpt")
     return (
       <img
@@ -88,7 +91,7 @@ export function CategoryIcon({
         src={`/api/icons/${iconKey.slice(7)}/image`}
         width={size}
         height={size}
-        alt="Icona personalizzata"
+        alt={t("Icona personalizzata")}
       />
     );
   const Icon = icons[iconKey ?? "tag"] ?? Tag;
@@ -101,15 +104,16 @@ export function CategoryBadge({
   value: CategoryMetadata;
   label?: boolean;
 }) {
+  useLanguage();
   const categories = useApi<Category[]>("/categories");
   const category = categories.data?.find((c) => c.id === value.category_id);
   return (
     <span
       className={label ? "category-badge" : "category-symbol"}
-      title={category?.name ?? "Senza categoria"}
+      title={category?.display_name ?? category?.name ?? t("Senza categoria")}
     >
       <CategoryIcon iconKey={category?.icon_key} />
-      {label && <span>{category?.name ?? "Senza categoria"}</span>}
+      {label && <span>{category?.display_name ?? category?.name ?? t("Senza categoria")}</span>}
     </span>
   );
 }
@@ -122,19 +126,18 @@ export function IconPicker({
   onChange: (key: string | null) => void;
   allowDefault?: boolean;
 }) {
+  useLanguage();
   const catalog = useApi<IconCatalog>("/icons");
   return (
-    <label>
-      Icona
-      <select
-        aria-label="Icona"
+    <label>{t("Icona")}<select
+        aria-label={t("Icona")}
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value || null)}
       >
-        {allowDefault && <option value="">Icona della categoria</option>}
+        {allowDefault && <option value="">{t("Icona della categoria")}</option>}
         {Object.entries(iconNames).map(([key, name]) => (
           <option value={key} key={key}>
-            {name}
+            {t(name)}
           </option>
         ))}
         {catalog.data?.custom.map((icon) => (
@@ -154,14 +157,13 @@ export function CategoryPicker({
   value: CategoryMetadata;
   onChange: (value: CategoryMetadata) => void;
 }) {
+  useLanguage();
   const categories = useApi<Category[]>("/categories");
   return (
     <div className="category-picker">
       <div>
-        <label>
-          Categoria
-          <select
-            aria-label="Categoria"
+        <label>{t("Categoria")}<select
+            aria-label={t("Categoria")}
             value={value.category_id ?? ""}
             onChange={(e) =>
               onChange({
@@ -169,10 +171,10 @@ export function CategoryPicker({
               })
             }
           >
-            <option value="">Senza categoria</option>
+            <option value="">{t("Senza categoria")}</option>
             {categories.data?.map((c) => (
               <option value={c.id} key={c.id}>
-                {c.name}
+                {c.display_name ?? c.name}
               </option>
             ))}
           </select>
@@ -180,7 +182,7 @@ export function CategoryPicker({
       </div>
       <div className="category-preview">
         <CategoryBadge value={value} label />
-        <span className="muted">Icona automatica dalla categoria</span>
+        <span className="muted">{t("Icona automatica dalla categoria")}</span>
       </div>
       <ErrorBox error={categories.error} />
     </div>
@@ -193,6 +195,7 @@ export function CategoryEditor({
   value: CategoryMetadata;
   path: string;
 }) {
+  useLanguage();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<CategoryMetadata>({
     category_id: value.category_id ?? null,
@@ -211,15 +214,13 @@ export function CategoryEditor({
             setOpen(!open);
           }}
         >
-          {open ? "Annulla" : "Modifica categoria"}
+          {open ? t("Annulla") : t("Modifica categoria")}
         </Button>
       </div>
       {open && (
         <>
           <CategoryPicker value={draft} onChange={setDraft} />
-          <p className="muted">
-            La categoria non modifica importi, quote o dati originali.
-          </p>
+          <p className="muted">{t("La categoria non modifica importi, quote o dati originali.")}</p>
           <ErrorBox error={save.error} />
           <Button
             disabled={save.isPending}
@@ -231,9 +232,7 @@ export function CategoryEditor({
                 /* rendered */
               }
             }}
-          >
-            Salva categoria
-          </Button>
+          >{t("Salva categoria")}</Button>
         </>
       )}
     </div>

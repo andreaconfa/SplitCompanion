@@ -1,3 +1,5 @@
+import { t, translateMessage } from "../i18n";
+import { useLanguage } from "../i18n/react";
 import { Person, UserPhoto } from "./Person";
 import { CategoryBadge } from "./Categories";
 import {
@@ -25,6 +27,7 @@ export function Button({
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "secondary" | "danger" | "ghost";
 }) {
+  useLanguage();
   return (
     <button className={"btn btn-" + variant} {...props}>
       {children}
@@ -44,12 +47,12 @@ export function PageHead({
   action?: ReactNode;
   back?: string;
 }) {
+  useLanguage();
   return (
     <header className="page-head">
       {back && (
         <Link className="back" to={back}>
-          <ArrowLeft size={18} /> Indietro
-        </Link>
+          <ArrowLeft size={18} />{" "}{t("Indietro")}</Link>
       )}
       <div className="heading-row">
         <div>
@@ -71,6 +74,7 @@ export function Section({
   action?: ReactNode;
   children: ReactNode;
 }) {
+  useLanguage();
   return (
     <section className="section">
       <div className="section-head">
@@ -82,15 +86,17 @@ export function Section({
   );
 }
 export function ErrorBox({ error }: { error: unknown }) {
+  useLanguage();
   return error ? (
     <div className="notice error" role="alert">
-      {error instanceof Error ? error.message : String(error)}
+      {translateMessage(error instanceof Error ? error.message : String(error))}
     </div>
   ) : null;
 }
 export function Loading() {
+  useLanguage();
   return (
-    <div className="skeletons" aria-label="Caricamento" role="status">
+    <div className="skeletons" aria-label={t("Caricamento")} role="status">
       <div />
       <div />
       <div />
@@ -106,6 +112,7 @@ export function State({
   error: unknown;
   children: ReactNode;
 }) {
+  useLanguage();
   if (pending) return <Loading />;
   if (error) return <ErrorBox error={error} />;
   return <>{children}</>;
@@ -119,6 +126,7 @@ export function Empty({
   detail?: string;
   action?: ReactNode;
 }) {
+  useLanguage();
   return (
     <div className="empty">
       <div className="empty-icon">
@@ -131,6 +139,7 @@ export function Empty({
   );
 }
 export function Avatar({ name, size = "normal" }: { name: string; size?: "normal" | "small" }) {
+  useLanguage();
   return <UserPhoto name={name} small={size === "small"} />;
 }
 export function Money({
@@ -142,6 +151,7 @@ export function Money({
   currency?: string;
   signed?: boolean;
 }) {
+  useLanguage();
   return (
     <span
       className={
@@ -162,9 +172,10 @@ export function ExpenseRow({
   users: User[];
   groupName?: string;
 }) {
+  useLanguage();
   const payer =
     users.find((u) => u.id === expense.paid_by_user_id)?.display_name ??
-    "Utente";
+    t("Utente");
   return (
     <Link to={"/expenses/" + expense.id} className="list-row">
       <span className="row-icon">
@@ -176,12 +187,11 @@ export function ExpenseRow({
           {groupName ? groupName + " · " : ""}
           {dateLabel(expense.expense_date)}
         </span>
-        <small>
-          Pagato da <Person user={users.find(user => user.id === expense.paid_by_user_id)} name={payer} small />
+        <small>{t("Pagato da")}{" "}<Person user={users.find(user => user.id === expense.paid_by_user_id)} name={payer} small />
           {expense.source === "SPLITWISE" ? " · Splitwise" : ""}
-          {expense.subscription_id ? " · Ricorrente" : ""}
+          {expense.subscription_id ? t(" · Ricorrente") : ""}
         </small>
-        <small className="expense-participants"><span>Divisa tra</span>{expense.splits.map(split => <Person key={split.user_id} user={users.find(user => user.id === split.user_id)} small />)}</small>
+        <small className="expense-participants"><span>{t("Divisa tra")}</span>{expense.splits.map(split => <Person key={split.user_id} user={users.find(user => user.id === split.user_id)} small />)}</small>
       </div>
       <div className="row-end">
         <Money value={expense.amount_cents} currency={expense.currency} />
@@ -197,6 +207,7 @@ export function SubscriptionRow({
   subscription: Subscription;
   users: User[];
 }) {
+  useLanguage();
   const credits = useApi<Credit[]>(
     "/subscriptions/" + subscription.id + "/credits",
   );
@@ -210,10 +221,10 @@ export function SubscriptionRow({
         <span>{recurrenceLabel(subscription.recurrence_rule)}</span>
         <small>
           {subscription.deleted
-            ? "Terminato"
+            ? t("Terminato")
             : subscription.active
-              ? "Prossimo: " + dateLabel(subscription.next_occurrence_date)
-              : "In pausa"}{" "}
+              ? t("Prossimo: ") + dateLabel(subscription.next_occurrence_date)
+              : t("In pausa")}{" "}
           ·{" "}
           <Person user={users.find(user => user.id === subscription.paid_by_user_id)} small />
         </small>
@@ -221,15 +232,10 @@ export function SubscriptionRow({
           ?.filter((credit) => credit.remaining_cents > 0)
           .map((credit) => (
             <small className="row-credit" key={credit.user_id}>
-              <Person user={users.find(user => user.id === credit.user_id)} name="Un partecipante" small />{" "}
-              ha {money(credit.remaining_cents, subscription.currency)} di
-              credito
-            </small>
+              <Person user={users.find(user => user.id === credit.user_id)} name={t("Un partecipante")} small />{" "}{t("ha")}{" "}{money(credit.remaining_cents, subscription.currency)}{" "}{t("di credito")}</small>
           ))}
         {credits.error && (
-          <small>
-            Credito non disponibile: apri il dettaglio per riprovare.
-          </small>
+          <small>{t("Credito non disponibile: apri il dettaglio per riprovare.")}</small>
         )}
       </div>
       <div className="row-end">
@@ -249,6 +255,7 @@ export function LegacyRow({
   record: Legacy;
   groupName?: string;
 }) {
+  useLanguage();
   return (
     <Link to={"/legacy/" + record.id} className="list-row">
       <span className="row-icon">
@@ -260,7 +267,7 @@ export function LegacyRow({
           {groupName ? groupName + " · " : ""}
           {dateLabel(record.date)}
         </span>
-        <small>Splitwise · Movimento storico</small>
+        <small>{t("Splitwise · Movimento storico")}</small>
       </div>
       <div className="row-end">
         <Money value={record.cost_cents} currency={record.currency} />
@@ -271,11 +278,12 @@ export function LegacyRow({
 }
 export function AddLink({
   to,
-  label = "Aggiungi",
+  label = t("Aggiungi"),
 }: {
   to: string;
   label?: string;
 }) {
+  useLanguage();
   return (
     <Link className="btn btn-primary" to={to}>
       <Plus size={18} />
@@ -285,17 +293,17 @@ export function AddLink({
 }
 export function Busy({
   busy,
-  label = "Salva",
+  label = t("Salva"),
 }: {
   busy: boolean;
   label?: string;
 }) {
+  useLanguage();
   return (
     <Button type="submit" disabled={busy}>
       {busy ? (
         <>
-          <LoaderCircle size={18} className="spin" /> Salvataggio…
-        </>
+          <LoaderCircle size={18} className="spin" />{" "}{t("Salvataggio…")}</>
       ) : (
         label
       )}
@@ -311,6 +319,7 @@ export function Sheet({
   children: ReactNode;
   onClose: () => void;
 }) {
+  useLanguage();
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const old = document.activeElement as HTMLElement;
@@ -359,7 +368,7 @@ export function Sheet({
           <button
             type="button"
             className="icon-button"
-            aria-label="Chiudi"
+            aria-label={t("Chiudi")}
             onClick={onClose}
           >
             <X size={22} />

@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 export type PeopleDisplay = "both" | "name" | "photo";
 export const PEOPLE_DISPLAY_KEY = "split.peopleDisplay";
 let fallbackDisplay: PeopleDisplay = "both";
@@ -19,8 +20,8 @@ export function avatarURL(id: number, version?: string | null) {
   return version ? `/api/users/${id}/avatar?v=${encodeURIComponent(version)}` : null;
 }
 export function avatarFileError(file: { size: number; type: string }) {
-  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) return "Scegli una foto PNG, JPEG o WebP.";
-  if (file.size > 2 * 1024 * 1024) return "La foto supera il limite di 2 MB.";
-  if (!file.size) return "La foto è vuota. Scegli un altro file.";
+  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) return t("Scegli una foto PNG, JPEG o WebP.");
+  if (file.size > 2 * 1024 * 1024) return t("La foto supera il limite di 2 MB.");
+  if (!file.size) return t("La foto è vuota. Scegli un altro file.");
   return "";
 }

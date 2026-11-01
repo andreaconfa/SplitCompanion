@@ -53,3 +53,16 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
     CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/ready', timeout=4).read()"]
 CMD ["python", "-m", "app.container"]
+
+# Supervisor supplies a root-owned /data/options.json; the adapter drops to UID 10001.
+FROM runtime AS homeassistant
+ENV PYTHONPATH=/app/backend
+ARG BUILD_VERSION
+ARG BUILD_ARCH
+LABEL io.hass.version=$BUILD_VERSION io.hass.type="app" io.hass.arch=$BUILD_ARCH
+USER 0:0
+COPY homeassistant/splitcompanion/run.py /app/homeassistant.py
+CMD ["python", "/app/homeassistant.py"]
+
+# Default docker build remains the standalone, non-root server.
+FROM runtime AS standalone
