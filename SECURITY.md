@@ -20,7 +20,7 @@ No proxy is distributed with the application.
 | Unauthorized data access | Group and administrator authorization | Create only trusted users; the user directory and avatars are instance-wide |
 | Malicious uploads | Size limits, image re-encoding, import validation | Proxy limits/timeouts, disk and resource monitoring |
 | Denial of service | One worker, body and authentication limits | Global request/concurrency/time limits; the app is not an anti-DDoS service |
-| Host compromise | Non-root container, read-only filesystem, dropped capabilities, no-new-privileges | Keep Linux and the runtime updated, do not mount the Docker socket, isolate networks |
+| Host compromise | Standalone Compose: non-root container, read-only filesystem, dropped capabilities, no-new-privileges | Keep Linux and the runtime updated, do not mount the Docker socket, isolate networks |
 | Stolen backups | Restrictive permissions and checksums | Backups are unencrypted: encrypt copies and store them off-host |
 | Revived old access after restore | Saved sessions and challenges are invalidated | Reconcile passwords, disabled accounts, recovery codes and push consent |
 
@@ -53,3 +53,16 @@ private channel is not active, request activation without including sensitive de
 - [OWASP Docker security guidance](https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html)
 - [Proxy and HTTPS](docs/proxy.md)
 - [Backup and recovery](docs/operations.md)
+
+## Home Assistant package
+
+The Home Assistant variant briefly starts as root to read Supervisor options and
+initialize its own persistent directories, then drops to UID/GID 10001 before
+opening the application. Supervisor manages its container isolation; it does not
+use the standalone Compose file. Protection mode remains enabled, and the package
+requests no privileged mode, host networking, Docker socket or Home Assistant API.
+Keep Supervisor and Home Assistant OS updated.
+
+The initial setup code is temporarily stored in the App's protected options, like
+other App secrets. Clear it after completing setup. Home Assistant backups contain
+these options and application data; encrypt them and keep a copy off the device.
