@@ -1,57 +1,58 @@
-# Preparare una release pubblica
+# Prepare a public release
 
-Questo ramo contiene soltanto server e web, con una cronologia iniziale nuova.
-Non pubblicare con `git push --mirror` o `--all` un repository che contiene anche
-rami privati. Per GitHub crea un clone della sola branch di release, senza tag
-privati, verifica ref e remoti e pubblica solo la branch prevista.
+This branch contains server/web source and documentation with a fresh public
+history. Do not use `git push --mirror` or `--all` from a repository that also
+contains private branches. Create a clone of only the release branch, without
+private tags, inspect refs/remotes and push only the intended branch.
 
-Prima della pubblicazione:
+## Before publication
 
-1. Scegli repository GitHub e namespace del registry. Abilita Private Vulnerability
-   Reporting. Verifica disponibilità e permessi del package GHCR.
-2. Controlla file, cronologia, identità dei commit, asset, archivio sorgenti e layer
-   dell’immagine. Scansiona segreti e riferimenti personali; non aggiungere export,
-   `.env`, DB, backup, certificati o file iOS. Le fixture contengono dati inventati.
-3. Esegui test Python/TypeScript, build e `scripts/container-smoke.py` su entrambe le
-   architetture. La prova crea e distrugge solo cartelle temporanee nuove.
-4. Aggiorna `backend/app/version.py`, tag e documentazione coerentemente. La pipeline
-   accetta tag `vX.Y.Z` oppure `vX.Y.Z-rc.N`; rifiuta mismatch con la versione server.
-5. Crea una release GitHub sul commit verificato. Il workflow `release.yml` esegue
-   test e scansioni, avvia le immagini amd64/arm64, poi pubblica i tag per architettura
-   e il manifest comune su `ghcr.io/<owner>/<repository>:<version>`.
-6. Controlla che il package sia effettivamente pubblico e prova un pull anonimo da
-   un host pulito. Metti nome e digest esatti nelle note della release e negli
-   esempi. Non sovrascrivere tag di versioni già consegnate.
+1. Choose a GitHub repository and registry namespace. Enable Private Vulnerability
+   Reporting and verify GHCR package permissions.
+2. Check files, history, commit identities, screenshots, source archives and image
+   layers. Scan for secrets and personal references. Do not add real exports,
+   `.env`, databases, backups, certificates or native iOS source. Use synthetic demo data.
+3. Run Python tests, frontend tests, TypeScript, the web build and
+   `scripts/container-smoke.py` for both image architectures on suitable Linux hosts.
+   The smoke test creates and destroys only its own new temporary directories.
+4. Update `backend/app/version.py`, image tags and documentation consistently.
+   The workflow accepts `vX.Y.Z` or `vX.Y.Z-rc.N` and rejects tag/version mismatches.
+5. Publish a GitHub release on the verified commit. `release.yml` tests and scans
+   the build, starts amd64/arm64 images and publishes architecture-specific tags
+   and a shared manifest at `ghcr.io/<owner>/<repository>:<version>`.
+6. Check that the package is public and test an anonymous pull from a clean host.
+   Put the exact image name and digest in release notes and examples. Never
+   overwrite versions already delivered to users.
 
-Il workflow pubblica soltanto in risposta a una release GitHub pubblicata, non a
-normali push. Nella preparazione privata non viene pubblicato alcun package.
-Non esiste un tag `latest` automatico. Il registry è separato dal repository:
-un repository pubblico non garantisce che il package sia già accessibile.
+Publishing runs only for a published GitHub release, not ordinary pushes. Private
+preparation does not publish a package. There is no automatic `latest` tag.
+Repository visibility and package visibility are separate settings.
 
-## Allegati e build manuali
+## Manual build and attachments
 
 ```sh
-docker build --platform linux/amd64 -t splitcompanion:1.2.0-rc.1 .
-docker save -o splitcompanion-amd64.tar splitcompanion:1.2.0-rc.1
+docker build --platform linux/amd64 -t splitcompanion:1.2.0-rc.2 .
+docker save -o splitcompanion-amd64.tar splitcompanion:1.2.0-rc.2
 python3 scripts/make-source-archive.py --output splitcompanion-source.tar.gz
 sha256sum splitcompanion-amd64.tar splitcompanion-source.tar.gz > SHA256SUMS
 ```
 
-Per arm64 ripeti su un builder compatibile con `--platform linux/arm64`.
-Pubblica il sorgente corrispondente insieme ai binari; nelle immagini è presente
-anche `/app/source.tar.gz`, scaricabile da `/api/source`. La build produce
-`third-party-notices.txt` per le dipendenze web; le dipendenze Python conservano i
-propri metadati e avvisi nell’immagine. Non rimuovere gli avvisi di terze parti.
+For arm64, use a suitable builder and `--platform linux/arm64`.
+Distribute corresponding source with binaries. Images also include
+`/app/source.tar.gz`, downloadable at `/api/source`. The frontend build generates
+`third-party-notices.txt`; Python packages retain their notices and metadata in
+the image. Do not remove third-party notices.
 
-## Wiki
+## GitHub Wiki
 
-La documentazione della wiki è in `wiki/`, navigabile anche dal repository.
-Per preparare file per il repository Git della wiki GitHub:
+The wiki lives in `wiki/` and can also be read directly in the repository.
+Prepare files for the separate GitHub Wiki repository:
 
 ```sh
 python3 scripts/export-wiki.py --output /tmp/splitcompanion-wiki
 ```
 
-Il comando crea una directory nuova, adatta al successivo commit nella wiki;
-non crea repository remoti né pubblica contenuti. Aggiorna la wiki insieme alla
-release e verifica i link sul servizio di destinazione.
+The command creates a new output directory and adjusts links for GitHub Wiki.
+It does not create remote repositories or publish content. Commit those files to
+your wiki repository after enabling it. Update the wiki with each release and
+check links on the destination service.

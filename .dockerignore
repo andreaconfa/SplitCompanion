@@ -61,3 +61,5 @@
 !.dockerignore
 !.gitignore
 !frontend/*.test.js
+
+!ROADMAP.md

@@ -1,14 +1,20 @@
-# Contribuire
+# Contributing
 
-Prima di una modifica, descrivi il problema e come riprodurlo con dati sintetici.
-Non allegare database, esportazioni reali, password, token, foto o indirizzi privati.
-Per vulnerabilità segui SECURITY.md, non una issue pubblica.
+Start by describing the problem and how to reproduce it with synthetic data.
+Do not attach databases, real exports, passwords, tokens, personal photos or
+private server addresses. For vulnerabilities, follow [SECURITY.md](SECURITY.md)
+instead of opening a public issue with exploit details.
 
-Mantieni invarianti contabili (importi interi, valute separate, idempotenza,
-autorizzazione ai gruppi e provenienza import). Aggiungi test per le regressioni e
-usa la procedura di sviluppo in docs/native.md. Contributi a server/web sono soggetti
-ad AGPL-3.0; mantieni gli avvisi delle dipendenze e il sorgente distribuito aggiornato.
+Preserve the accounting rules: integer amounts, separate currencies, idempotent
+recurring charges, group access control and import provenance. Add regression
+tests where appropriate and follow the [development guide](docs/native.md).
+Server/web contributions use AGPL-3.0. Preserve dependency notices and keep the
+distributed source archive consistent with the application.
 
-Non aggiungere configurazioni personali o servizi proxy al Compose applicativo.
-Le installazioni native devono restare possibili senza Docker. Le variazioni API
-incompatibili richiedono un aggiornamento esplicito del contratto.
+Do not add personal configuration or reverse proxy services to the application
+Compose file. Native Linux installations must remain possible without Docker.
+Breaking API changes require an explicit contract version change.
+
+Use English for documentation and examples. Use fictional names and reserved
+example domains/IP addresses. Screenshots must use synthetic data and must not
+expose real users, server addresses, account details or credentials.

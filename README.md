@@ -1,109 +1,154 @@
+<p align="center"><img src="frontend/public/icon-192.png" width="88" alt="Split Companion logo"></p>
+
 # Split Companion
 
-**Spese condivise, sul tuo server.** Gestisci gruppi, spese, abbonamenti e crediti
-con un’interfaccia web adattata a telefono, tablet e desktop, installabile come PWA.
+**Shared expenses. Your server. Your data.**
 
-Un solo container contiene backend e web. SQLite, chiavi e configurazione
-operativa rimangono nelle cartelle del tuo host. Nessun account cloud obbligatorio,
-nessuna registrazione pubblica: l’amministratore crea gli utenti dell’istanza.
+Split bills, manage shared subscriptions and keep track of who owes what — from
+your browser, an installable PWA or the native iOS companion. Built for households,
+friends and small private groups, with a consistent interface across devices.
 
-> **Versione candidata 1.2.0-rc.1.** Questo ramo prepara la prima distribuzione
-> pubblica. Non implica che esista già un’immagine su un registry pubblico.
-> Le release pubblicate indicheranno il nome esatto dell’immagine e il digest.
+**[Installation guide](wiki/Installation.md)** · **[Documentation](wiki/Home.md)** · **[Roadmap](ROADMAP.md)** · **[Security](SECURITY.md)**
 
-## Cosa puoi fare
+> **Release candidate 1.2.0-rc.2.** Public registry distribution is being prepared.
+> Published releases will provide the exact image name, version and digest.
+> You can build from source or load the prepared Docker image archives.
 
-- Dividere spese in parti uguali, importi, percentuali o assegnarle a una persona.
-- Gestire saldi e regolamenti separati per valuta, senza conversioni automatiche.
-- Programmare abbonamenti, registrare anticipi, utilizzare crediti e rimborsi.
-- Consultare statistiche mensili, categorie, avatar e storico dei movimenti.
-- Importare esportazioni CSV/JSON di Splitwise con anteprima e annullamento.
-- Usare account locali, verifica in due passaggi e backup completi.
+## One app, across your devices
 
-## Avvio rapido con Docker
+### Web app
 
-Servono Docker Engine con Compose e disco locale: **una replica, un worker**.
-Non mettere SQLite su NFS/SMB o cartelle macOS condivise da Docker Desktop. Architetture previste: Linux amd64 e arm64.
+Open the web app directly in your browser. The spacious desktop layout brings
+balances, monthly charts, recent activity and upcoming payments together.
 
-1. Scarica `compose.yaml` e `.env.example` dalla stessa release.
-2. Prepara le cartelle sul server Linux:
+![Web dashboard in a desktop browser, using the Indigo accent](docs/images/web-desktop.png)
+
+### PWA
+
+Add Split Companion to your phone's Home Screen for an app-like experience without
+installing the native app. The responsive interface adapts to standard iPhones
+and to iPhone Duo's closed and open screen sizes, based on the available width.
+HTTPS is required for the full PWA experience. [PWA setup](docs/pwa.md).
+
+<p align="center">
+  <img src="docs/images/pwa-overview.png" width="280" alt="PWA overview with Indigo accent">
+  <img src="docs/images/pwa-subscriptions.png" width="280" alt="PWA shared subscriptions with Indigo accent">
+</p>
+
+### Native iOS app — awaiting Apple review
+
+The native SwiftUI companion connects to the same self-hosted backend as the web
+app. App Store availability will be announced after Apple approval; there is no
+public App Store download yet.
+
+- Adaptive layouts for standard iPhones and **iPhone Duo**, closed or open.
+- Multiple server profiles, shared expenses, subscriptions, credits and statistics.
+- **Home Screen and Lock Screen widgets** for a quick look at your balances and upcoming payments.
+- A **mini companion app for Apple Watch**, with balances, recent expenses and upcoming payments.
+- **Watch face complications** for information at a glance.
+- Server API compatibility checks with guidance when the app or server needs an update.
+
+Widgets and Watch display the latest summary synced from the iPhone. They are not
+independent server clients; fresh data requires an iPhone refresh and connectivity.
+
+<p align="center"><img src="docs/images/ios-duo-closed.png" width="280" alt="Native iOS app on the closed iPhone Duo, with Indigo accent"></p>
+
+![Native iOS app on the open iPhone Duo, with Indigo accent](docs/images/ios-duo.png)
+
+*Screenshots use fictional demo data and the Indigo accent. They show the current
+Italian-language interface; the documentation is in English. Native screenshots
+are development previews. Native iOS source is not included in this repository.*
+
+## What you can do
+
+- Split expenses equally, by exact amounts, by percentages or assign them to one person.
+- Track balances and settlements separately for each currency, without automatic conversion.
+- Manage recurring subscriptions, advance payments, credits and refunds.
+- Explore monthly statistics, categories, participant avatars and transaction history.
+- Import Splitwise CSV/JSON exports with preview and rollback.
+- Use local accounts, two-factor authentication and complete backups.
+- Choose light or dark appearance and five accent colors.
+
+## Quick start on Linux
+
+You need Docker Engine with the Compose plugin and a local disk on a Linux server
+(amd64 or arm64). Run **one replica and one worker**. Do not put SQLite on NFS or SMB.
+
+1. Download `compose.yaml` and `.env.example` from the same release.
+2. Prepare the configuration and persistent directories:
 
    ```sh
    cp .env.example .env
    sudo install -d -m 0700 -o 10001 -g 10001 data backups
    ```
 
-3. In `.env`, imposta `SPLIT_COMPANION_IMAGE` al nome e tag/digest pubblicati nella
-   release. Con gli archivi Docker allegati a una release, esegui prima
-   `docker load -i splitcompanion-<arch>.tar` e usa il tag indicato nell’archivio.
-   Per questa candidata puoi [costruire l’immagine dai sorgenti](docs/native.md).
-4. Avvia e genera il codice di configurazione:
+3. Set `SPLIT_COMPANION_IMAGE` in `.env` to the published image name and version or
+   digest. For an image archive, run `docker load -i splitcompanion-<arch>.tar`
+   first and use its documented tag. Alternatively, [build from source](docs/native.md).
+4. Start the application and generate the initial setup code:
 
    ```sh
    docker compose up -d
    docker compose exec app python -m app.cli setup-token
    ```
 
-5. Apri `http://localhost:8000` dal server e crea l’amministratore con quel codice.
-   Scade dopo 30 minuti e funziona una sola volta. Completa la verifica in due
-   passaggi e conserva i codici di recupero.
+5. Open `http://localhost:8000` on the server and create the administrator account.
+   The code expires after 30 minutes and can only be used once. Complete two-factor
+   authentication and store your recovery codes somewhere safe.
 
-La porta è inizialmente disponibile **solo sul server**, su `127.0.0.1`.
-Per una LAN fidata, imposta `SPLIT_COMPANION_BIND` all’IP LAN del server; HTTP
-trasmette credenziali e dati senza cifratura. Per accesso da Internet o PWA su
-telefono configura il tuo [reverse proxy HTTPS esterno](docs/proxy.md).
+The default binding is **127.0.0.1**, accessible only on the server. To connect from
+a trusted LAN, set `SPLIT_COMPANION_BIND` to the server's LAN address and recreate
+the container. HTTP does not encrypt credentials or data. For Internet access or
+a phone PWA, configure your own [external HTTPS reverse proxy](docs/proxy.md).
 
-## I dati sopravvivono agli aggiornamenti
+## Update the container, keep your data
 
-| Cartella host | Nel container | Contenuto |
+| Host directory | Container path | Contents |
 | --- | --- | --- |
-| `./data` | `/data` | Database, segreto dell’istanza, chiavi push, stato operativo |
-| `./backups` | `/backups` | Archivi completi di backup |
+| `./data` | `/data` | SQLite database, instance secret, push keys and operational state |
+| `./backups` | `/backups` | Complete backup archives |
 
-Puoi scegliere cartelle assolute in `.env`. Devono esistere ed essere scrivibili
-all’UID/GID `10001:10001`. Non usare `chmod 777`. Ricreare il container mantiene
-queste cartelle; eliminarle o cambiarle perde o nasconde i dati. Conserva tutto
-`data`, non soltanto il file `.db`: perdere il segreto impedisce il recupero MFA.
-
-Prima di aggiornare:
+Choose different absolute host paths in `.env` if needed. Both directories must
+exist and be writable by UID/GID `10001:10001`. Do not use `chmod 777`.
+Recreating the container keeps these directories intact. Keep the entire `data`
+directory, not just the `.db` file: losing the secret prevents MFA recovery.
 
 ```sh
 docker compose exec app python -m app.cli backup-full --output-dir /backups --kind manual
-# Imposta in .env il nuovo tag o digest, poi:
+# Set the new image version or digest in .env, then:
 docker compose pull
 docker compose up -d
 docker compose ps
 ```
 
-Per immagini caricate da archivio, usa `docker load` al posto di `pull`.
-Leggi la [guida backup e ripristino](docs/operations.md) prima di un downgrade.
+For archive-based installations, use `docker load` instead of `pull`.
+Read the [backup and restore guide](docs/operations.md) before downgrading.
 
-## PWA su iPhone e altri dispositivi
+## A single application container
 
-Per l’esperienza PWA completa su iPhone serve **HTTPS con un certificato
-considerato attendibile dal dispositivo**, anche sulla LAN o tramite VPN.
-Safari → Condividi → Aggiungi alla schermata Home. Un collegamento Home su HTTP
-non equivale alla disponibilità di service worker e notifiche.
-[Requisiti e limiti PWA](docs/pwa.md).
+The container includes the backend and compiled web app. It serves HTTP on port
+8000. **It does not include Caddy, Nginx, TLS certificates or HTTPS management.**
+Choose and manage your own proxy, DNS, certificates and firewall.
 
-Il container espone soltanto HTTP sulla porta 8000. **Non include Caddy, Nginx,
-certificati o gestione HTTPS**. Il proxy è scelto, configurato e aggiornato da te.
+There is no public sign-up: the administrator creates users for a private instance.
+No managed cloud account is required. The [source is available](docs/native.md)
+for experienced users who want to build or run the application natively on Linux.
 
-## Documentazione
+## Documentation and next steps
 
-**[Apri la wiki di installazione e configurazione](wiki/Home.md)**
+- [Installation and configuration wiki](wiki/Home.md)
+- [Build from source or run natively](docs/native.md)
+- [External reverse proxy and HTTPS](docs/proxy.md)
+- [Backup, updates and account recovery](docs/operations.md)
+- [PWA and notifications](docs/pwa.md)
+- [Internet exposure and security](SECURITY.md)
+- [Client compatibility](docs/compatibility.md)
+- [Roadmap: personal expenses, Android and more](ROADMAP.md)
+- [Contributing](CONTRIBUTING.md)
 
-- [Docker, build e avvio nativo dai sorgenti](docs/native.md)
-- [Proxy esterno, HTTPS e porte](docs/proxy.md)
-- [Backup, aggiornamenti e recupero accesso](docs/operations.md)
-- [PWA e notifiche](docs/pwa.md)
-- [Sicurezza e rischi di esposizione su Internet](SECURITY.md)
-- [Compatibilità API](docs/compatibility.md)
-- [Preparazione e pubblicazione delle release](docs/releasing.md)
+## License
 
-## Licenza
-
-Server e web/PWA sono distribuiti sotto [GNU AGPL-3.0](LICENSE). L’app iOS nativa
-non è inclusa in questo repository né in questi container. Il codice della
-versione installata è scaricabile da **Impostazioni → Codice sorgente** nelle
-immagini ufficiali. Vedi anche [NOTICE](NOTICE).
+Server and web/PWA source are licensed under [GNU AGPL-3.0](LICENSE).
+The native iOS app is distributed separately; its source is not included here.
+Official container builds provide their corresponding source through the source
+link in Settings and at `/api/source`. See [NOTICE](NOTICE) for third-party notices.

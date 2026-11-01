@@ -1,15 +1,15 @@
-# Proxy HTTPS esterno
+# External HTTPS reverse proxy
 
-Split Companion serve HTTP sulla porta 8000. Il container non installa, avvia o
-configura proxy, certificati, DNS o rinnovi TLS. Puoi usare Nginx Proxy Manager,
-Caddy, Nginx o un’infrastruttura equivalente amministrata da te.
+Split Companion serves HTTP on port 8000. The container does not install, run or
+configure a proxy, certificates, DNS or TLS renewal. Use your own Nginx Proxy
+Manager, Caddy, Nginx or equivalent infrastructure.
 
-1. Crea un nome DNS e un certificato attendibile dai client.
-2. Configura il proxy per inoltrare l’intera origine (web e `/api`) alla porta 8000.
-   Non è previsto un prefisso come `/split/`.
-3. Conserva l’header `Host` originale. Il proxy deve **sovrascrivere**, non fidarsi
-   dei valori forniti dal client, `X-Forwarded-Proto` e `X-Forwarded-For`.
-4. Configura `.env`:
+1. Set up a DNS name and a certificate trusted by your clients.
+2. Forward the entire origin, including the web app and `/api`, to port 8000.
+   A subpath such as `/split/` is not supported.
+3. Preserve the original `Host` header. The proxy must **overwrite**
+   `X-Forwarded-Proto` and `X-Forwarded-For`, not trust client-supplied values.
+4. Configure `.env`:
 
    ```dotenv
    SPLIT_COMPANION_PUBLIC_ORIGIN=https://split.example.org
@@ -17,24 +17,25 @@ Caddy, Nginx o un’infrastruttura equivalente amministrata da te.
    SPLIT_COMPANION_ALLOW_HTTP=false
    ```
 
-   Sostituisci dominio e IP di documentazione: l’IP deve essere quello del proxy
-   **visto dal container**. Non usare `*`, `0.0.0.0/0`, `::/0` o intere reti LAN
-   se non necessarie. Con PUBLIC_ORIGIN i cookie diventano Secure e sono accettati
-   soltanto host e schema previsti. `/api/health` e `/api/ready` restano sonde locali.
-5. Riavvia con `docker compose up -d` e controlla il login tramite HTTPS.
+   Replace these documentation-only addresses. Use the proxy IP **as seen by the
+   container**. Do not trust `*`, `0.0.0.0/0`, `::/0` or unnecessarily broad LAN
+   ranges. With `PUBLIC_ORIGIN`, cookies become Secure and requests must match the
+   configured host and scheme. `/api/health` and `/api/ready` remain local probes.
+5. Apply changes with `docker compose up -d` and check login through HTTPS.
 
-Il binding `127.0.0.1` funziona con un proxy sullo stesso host. Un proxy in un altro
-container non raggiunge il loopback dell’host: collegalo a una rete Docker dedicata
-mediante un tuo override, oppure esponi la porta soltanto sull’interfaccia privata
-raggiungibile da quel proxy e applica il firewall. Non pubblicare 8000 su Internet.
-Le regole Docker possono aggirare alcuni frontend firewall: verifica dall’esterno.
+The default `127.0.0.1` binding works for a proxy on the same host. A proxy in
+another container cannot reach the host's loopback interface. Attach it through
+your own dedicated Docker network override, or bind only to a private interface
+reachable by that proxy and enforce firewall restrictions. Do not expose port
+8000 to the Internet. Docker port publishing may bypass some firewall frontends;
+verify reachability from outside the server.
 
-Sul proxy configura limiti per richieste concorrenti, velocità e tempi di lettura,
-oltre a un massimo body di 12 MiB (l’app applica limiti più restrittivi per endpoint).
-Un limite troppo basso impedisce gli import. Una catena di più proxy richiede una
-configurazione verificata degli IP originali; altrimenti il rate limit può trattare
-tutti gli utenti come una sola sorgente o fidarsi di dati falsificati.
+Set concurrency limits, request rate limits and read timeouts on the proxy. Allow
+request bodies up to 12 MiB; the app enforces smaller endpoint-specific limits.
+A lower proxy limit may block imports. Multiple proxy hops require a verified
+configuration for the original client IP; otherwise rate limiting may group all
+users together or rely on spoofed headers.
 
-TLS termina sul proxy: mantieni protetto anche il collegamento proxy→app. Non
-cachare risposte `/api`, cookie o pagine autenticate. `PUBLIC_ORIGIN` deve corrispondere
-all’indirizzo effettivamente usato dai client, senza slash finale o percorso.
+TLS terminates at your proxy. Protect the proxy-to-application connection too.
+Do not cache `/api` responses, cookies or authenticated pages. `PUBLIC_ORIGIN`
+must match the actual client-facing origin, without a trailing slash or path.

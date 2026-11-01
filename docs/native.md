@@ -1,32 +1,33 @@
-# Build e avvio dai sorgenti
+# Build from source and run natively
 
-Il sorgente della stessa versione è incluso nella release e scaricabile da
-`/api/source` sulle immagini ufficiali. L’app nativa iOS non è necessaria.
+The corresponding source is included in each release and is available at
+`/api/source` in official container builds. The native iOS app is not required.
 
-## Costruire il container
+## Build the container on Linux
 
-Dalla cartella dei sorgenti:
+From the source directory:
 
 ```sh
-docker build -t splitcompanion:1.2.0-rc.1 .
+docker build -t splitcompanion:1.2.0-rc.2 .
 cp .env.example .env
 sudo install -d -m 0700 -o 10001 -g 10001 data backups
 docker compose up -d
+docker compose exec app python -m app.cli setup-token
 ```
 
-Per scegliere esplicitamente l’architettura: aggiungi `--platform linux/amd64`
-oppure `--platform linux/arm64`. Node compila il web in uno stadio separato;
-l’immagine finale contiene Python, web compilato e il sorgente corrispondente.
-Al primo avvio non vengono scaricate dipendenze.
+Add `--platform linux/amd64` or `--platform linux/arm64` to select an architecture
+supported by your builder. Node builds the web app in a separate stage. The runtime
+image contains Python, the compiled web app and corresponding source; it does not
+download dependencies or compile code at startup.
 
-## Avvio nativo Linux
+## Run natively on Linux
 
-Requisiti: Python 3.13, Node 22 con npm, SQLite su disco locale. Servono rete e
-strumenti di compilazione eventualmente richiesti dai pacchetti durante la build.
-Usa un account dedicato senza privilegi e un singolo processo. Non usare
-`uvicorn --workers` o `--reload` per l’istanza reale.
+Requirements: Python 3.13, Node 22 with npm, and SQLite on local storage. Network
+access and any compiler tools required by dependencies are needed during the build.
+Use a dedicated unprivileged account and a single process. Do not run the live
+instance with `uvicorn --workers` or `--reload`.
 
-Dalla cartella dei sorgenti:
+From the source directory:
 
 ```sh
 python3.13 -m venv .venv
@@ -35,7 +36,6 @@ python3.13 -m venv .venv
 node scripts/collect-licenses.mjs frontend/node_modules frontend/dist/third-party-notices.txt
 mkdir -m 700 data backups
 python3.13 scripts/make-source-archive.py --output /tmp/splitcompanion-source.tar.gz
-# Per un percorso durevole, sposta l’archivio nella directory privata dell’istanza.
 mv /tmp/splitcompanion-source.tar.gz data/source.tar.gz
 export SPLIT_COMPANION_DB="$PWD/data/split-companion.db"
 export SPLIT_COMPANION_BACKUP_DIR="$PWD/backups"
@@ -51,19 +51,20 @@ export PYTHONPATH="$PWD/backend"
 .venv/bin/python -m app.container
 ```
 
-`app.container` è anche il launcher nativo: verifica permessi e asset, blocca una
-seconda istanza sullo stesso volume, controlla lo schema, esegue le migrazioni e
-avvia il server. In un altro terminale con la stessa configurazione:
+`app.container` is also the native launcher: it checks directories and web assets,
+locks the instance, validates the schema, runs migrations and starts the server.
+In another terminal with the same environment settings, generate the setup code:
 
 ```sh
 .venv/bin/python -m app.cli setup-token
 ```
 
-Per l’avvio automatico configura il tuo supervisor/systemd con queste variabili,
-l’utente dedicato, la directory di lavoro dei sorgenti e l’eseguibile della venv.
-Non creare un secondo scheduler. Consulta [proxy](proxy.md) e [operazioni](operations.md).
+For automatic startup, configure your own supervisor/systemd service with these
+environment variables, the dedicated user, the source working directory and the
+virtual environment's Python executable. Do not start another scheduler.
+See [external HTTPS](proxy.md) and [operations](operations.md).
 
-## Sviluppo e test
+## Development and tests
 
 ```sh
 .venv/bin/python -m pip install -r backend/requirements-dev.lock
@@ -72,8 +73,8 @@ Non creare un secondo scheduler. Consulta [proxy](proxy.md) e [operazioni](opera
 (cd frontend && npm ci && npm test && npm run build)
 ```
 
-I test creano dati sintetici: non configurarli sul database reale. Per il frontend
-in sviluppo, `npm run dev` inoltra `/api` a un backend locale sulla porta 8000.
+Tests create synthetic data. Never point them at a live database. For frontend
+development, `npm run dev` forwards `/api` to a local backend on port 8000.
 
-Quando modifichi il sorgente, rigenera l’archivio distribuito: AGPL richiede il
-sorgente corrispondente, non il codice di una versione precedente.
+When modifying the application, regenerate its distributed source archive.
+AGPL requires corresponding source, not source from a different version.

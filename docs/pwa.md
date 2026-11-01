@@ -1,34 +1,41 @@
-# PWA: usare Split Companion come app web
+# Install and use the PWA
 
-Per le funzionalità PWA complete, usa **HTTPS con un certificato attendibile**.
-Questo vale anche quando server e telefono sono sulla stessa LAN o VPN. HTTP
-su un IP privato non è un contesto sicuro per i service worker.
+For the full PWA experience, use **HTTPS with a certificate trusted by the device**.
+This applies even when the Linux server and phone share a LAN or VPN. An HTTP
+address on a private network is not a secure context for service workers.
 
-Il requisito non è soltanto una limitazione Apple: i browser riservano i service
-worker ai contesti sicuri. L’eccezione `http://localhost` serve allo sviluppo sullo
-stesso dispositivo, non rende sicuro l’IP di un server remoto.
-[Documentazione Service Worker](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API).
+This is not only an Apple restriction: browsers reserve service workers for secure
+contexts. The `http://localhost` exception is for development on the same device;
+it does not make a remote server's private IP a secure origin.
+[Service Worker documentation](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API).
 
-## iPhone e iPad
+## iPhone and iPad
 
-Apri il tuo indirizzo HTTPS in Safari, scegli **Condividi → Aggiungi alla schermata
-Home** e avvia l’icona creata. Può essere possibile aggiungere anche un semplice
-collegamento HTTP, ma ciò non abilita le funzioni PWA protette.
+Open your HTTPS address in Safari, choose **Share → Add to Home Screen**, then
+launch the new icon. Adding an HTTP bookmark to the Home Screen does not enable
+protected PWA features.
 
-Le notifiche Web Push su iOS/iPadOS richiedono versione 16.4 o successiva e una
-web app aggiunta alla Home; il consenso deve seguire un’azione dell’utente.
-[Requisiti WebKit](https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/).
-L’operatore deve anche abilitare push, impostare un contatto/origine VAPID valido e
-consentire le connessioni HTTPS in uscita verso i provider di notifiche.
+Web Push on iOS/iPadOS requires version 16.4 or later and a Home Screen web app.
+Permission must follow a user action.
+[WebKit requirements](https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/).
+The server operator must also enable push, configure a valid VAPID contact/origin
+and allow outbound HTTPS to notification providers.
 
-## Rete e aggiornamenti
+## Other browsers
 
-La PWA conserva la shell statica, non mette le API autenticate nella cache e non
-accoda spese da inviare in seguito. I dati richiedono il server raggiungibile.
-Quando compare una nuova versione, salva i moduli aperti e scegli **Aggiorna**.
+Open the HTTPS site and use the browser's install command where available.
+The ordinary browser interface remains available even without installation.
+Installation prompts and push support depend on the browser and operating system.
 
-Tema e colore sono preferenze del browser. Il layout segue lo spazio disponibile:
-navigazione inferiore sotto 768 px, a destra su schermi più ampi, riepilogo a due
-colonne da 1024 px. Non richiede rilevamento di cerniere o angoli di piega.
+## Connection, updates and layout
 
-HTTPS e certificati sono interamente gestiti dal tuo [proxy esterno](proxy.md).
+The PWA caches the static app shell. It does not cache authenticated API responses
+or queue offline expense entries. Viewing current data and saving changes require
+a reachable server. Save open forms before accepting an available app update.
+
+Theme and accent are local browser preferences. Navigation appears at the bottom
+below 768 px and on the right at larger widths. The overview uses two columns from
+1024 px. Standard iPhone and iPhone Duo closed/open layouts follow available space;
+the web app does not need to detect a hinge or folding angle.
+
+HTTPS and certificates are managed entirely by your [external proxy](proxy.md).

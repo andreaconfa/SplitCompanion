@@ -1,30 +1,34 @@
-# Backup, aggiornamenti e recupero
+# Backups, updates and account recovery
 
-## Cosa conservare
+## What to keep
 
-La cartella `data` contiene database SQLite, segreto applicativo, chiavi VAPID e
-stato operativo. Avatar e icone caricate sono nel database. La cartella `backups`
-contiene archivi consistenti con database, segreti e manifest con checksum.
-I backup sono **in chiaro** e sensibili: limita i permessi, cifra le copie esterne
-e conserva una copia su un altro host. Non caricarli su GitHub o nelle issue.
+The `data` directory contains SQLite, the application secret, VAPID push keys and
+operational state. Uploaded avatars and icons are stored in the database.
+The `backups` directory contains consistent archives with the database, secrets
+and a checksum manifest.
+
+Backups are **unencrypted** and contain private information. Restrict access,
+encrypt off-host copies and keep a copy on another host. Never attach them to
+GitHub issues or commit them to Git.
 
 ```sh
 docker compose exec app python -m app.cli backup-full --output-dir /backups --kind manual
 ```
 
-Sono pianificati backup giornalieri (ore 03:00 nel fuso configurato), mantenendo
-gli ultimi 14. I backup manuali e precedenti alle migrazioni sono separati dalla
-rotazione: controlla spazio disponibile e diagnostica amministrativa.
+Daily backups run at 03:00 in the configured timezone by default, retaining the
+latest 14 daily backups. Manual and pre-migration backups are kept separately from
+that rotation. Monitor disk space and administrator diagnostics.
 
-## Aggiornare
+## Update
 
-Crea un backup e conserva versione e digest attuali. Imposta il nuovo tag/digest,
-esegui `docker compose pull` e `docker compose up -d`. Se usi un archivio locale,
-caricalo con `docker load` invece di `pull`. Non cancellare né cambiare le cartelle
-`data` e `backups`. Una sola istanza può scrivere sul volume.
+Create a backup and record the current image version/digest. Set the new image
+version/digest, run `docker compose pull`, then `docker compose up -d`. For a local
+image archive, use `docker load` instead of `pull`. Do not delete or change the
+`data` and `backups` directories. Only one application instance may write the database.
 
-L’avvio controlla schema, integrità, permessi e asset; prima di una migrazione crea
-un backup. Se fallisce, si arresta senza ripristini distruttivi automatici. Controlla:
+Startup validates schema, integrity, permissions and assets and takes a backup
+before migrations. If a required check fails, startup stops without automatically
+restoring old data. Inspect:
 
 ```sh
 docker compose ps
@@ -32,15 +36,15 @@ docker compose logs --tail 100 app
 curl --fail http://localhost:8000/api/ready
 ```
 
-La healthcheck Docker segnala `unhealthy`, ma da sola non riavvia il container.
-Un downgrade dell’immagine non annulla le migrazioni: usa versione e backup abbinati.
-Non sostituire un database aggiornato con uno precedente ignorando nuove scritture.
+A Docker healthcheck can mark a container unhealthy, but does not itself restart
+it. Downgrading the image does not undo migrations: use the matching image and
+backup. Do not overwrite newer transactions with an older backup without reconciliation.
 
-## Ripristino offline su una cartella nuova
+## Offline restore into a new directory
 
-Ferma il servizio; conserva i dati attuali. Crea una cartella vuota e avvia il CLI
-con l’immagine compatibile con il backup. Esempio dalla cartella Compose, dopo aver
-sostituito nome archivio e versione con quelli effettivi:
+Stop the service and preserve its current data. Create an empty directory and
+run the CLI using an image compatible with the backup. From the Compose directory,
+replace the archive name and image version in this example with your actual values:
 
 ```sh
 docker compose stop app
@@ -49,33 +53,33 @@ docker run --rm --network none --read-only --cap-drop ALL \
   --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=64m \
   --mount "type=bind,src=$PWD/data-restored,dst=/data" \
   --mount "type=bind,src=$PWD/backups,dst=/backups,readonly" \
-  splitcompanion:1.2.0-rc.1 python -m app.cli restore /backups/ARCHIVE.tar.gz --confirm
+  splitcompanion:1.2.0-rc.2 python -m app.cli restore /backups/ARCHIVE.tar.gz --confirm
 ```
 
-Il comando verifica archivio, checksum, integrità e compatibilità. Cambia
-`SPLIT_COMPANION_DATA_DIR` a `./data-restored` prima di riavviare. Le sessioni e le
-richieste MFA pendenti vengono invalidate durante il ripristino: serve un nuovo
-login. Il segreto MFA è conservato, quindi gli autenticatori continuano a funzionare.
+The command verifies the archive, checksums, database integrity and compatibility.
+Set `SPLIT_COMPANION_DATA_DIR=./data-restored` before restarting. Saved sessions and
+pending MFA challenges are invalidated during restore, so users must sign in again.
+The original MFA secret is preserved, keeping enrolled authenticators usable.
 
-Un backup riporta anche password, account, codici di recupero e consensi push allo
-stato del salvataggio. Prima di riesporre l’istanza, riconcilia account disabilitati,
-password cambiate e codici recupero utilizzati; rigenera questi ultimi se necessario.
+A backup also restores old passwords, account state, recovery codes and push
+consent. Before exposing the instance again, reconcile disabled accounts, changed
+passwords and consumed recovery codes. Regenerate recovery codes when necessary.
 
-## Recuperare un account
+## Recover an account
 
 ```sh
 docker compose exec app python -m app.cli reset-password USERNAME
 docker compose exec app python -m app.cli reset-mfa USERNAME
 ```
 
-La password viene richiesta senza eco; non passarla in argomenti shell. Un reset
-MFA è un’operazione amministrativa sensibile: verifica l’identità della persona.
-Il setup iniziale non si riapre disabilitando gli amministratori.
+The password is requested without echo; do not pass it as a shell argument.
+MFA reset is a sensitive administrator operation: verify the person's identity.
+Disabling administrators does not reopen initial setup.
 
-## Diagnostica
+## Diagnostics
 
-`/api/health` conserva la risposta `{"status":"ok"}`; `/api/ready` verifica la
-prontezza del servizio. `/api/admin/status` richiede un amministratore e riporta
-scheduler, backup e notifiche. I fallimenti push non rendono indisponibile la
-contabilità. Usa log e identificativo richiesta per diagnosticare errori senza
-condividere password, cookie, import o database.
+`/api/health` retains its `{"status":"ok"}` response. `/api/ready` checks service
+readiness. `/api/admin/status` requires an administrator and reports scheduler,
+backup and notification status. Push delivery failures do not disable accounting.
+Use logs and request IDs to investigate errors without sharing passwords, cookies,
+imports or database files.

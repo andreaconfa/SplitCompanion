@@ -1,53 +1,52 @@
-# Sicurezza
+# Security
 
-Split Companion è destinato a istanze private di famiglia o piccoli gruppi, non
-è un servizio multi-tenant per utenti pubblici ostili. Non offre registrazione
-aperta. La preparazione di questa release comprende revisione del codice e test;
-non costituisce una certificazione o un penetration test indipendente.
+Split Companion is designed for private households and small groups, not a public
+multi-tenant service with untrusted users. It does not offer open registration.
+Code review and tests are part of release preparation; they are not a security
+certification or an independent penetration test.
 
-## Esposizione su Internet
+## Internet exposure
 
-La soluzione con superficie esposta minore è l’accesso tramite VPN. Se scegli
-Internet, pubblica soltanto il tuo proxy HTTPS e impedisci l’accesso diretto alla
-porta 8000. TLS, certificati, DNS, firewall e protezioni del proxy sono responsabilità
-dell’operatore; nessun proxy viene distribuito con l’app.
+Access through a VPN exposes less of the service. If you choose Internet access,
+expose only your HTTPS proxy and block direct access to port 8000. TLS, certificates,
+DNS, firewall rules and proxy protections are the operator's responsibility.
+No proxy is distributed with the application.
 
-| Rischio | Controlli presenti | Cosa resta da fare |
+| Risk | Application controls | Operator responsibilities |
 | --- | --- | --- |
-| Furto credenziali/sessioni | Argon2id, cookie HttpOnly/Secure su HTTPS, MFA TOTP, CSRF, sessioni revocabili | HTTPS, password uniche, conservazione sicura dei recovery code |
-| Tentativi di login | Limiti per account e IP, limitazione MFA/setup | Proxy configurato correttamente, protezione contro traffico distribuito |
-| Falsificazione proxy | IP/CIDR fidati espliciti, origine HTTPS/host verificati | Sovrascrivere forwarded header e isolare la porta backend |
-| Accesso ai dati | Autorizzazioni per gruppo e per amministrazione | Creare solo utenti fidati; utenti e foto sono condivisi nell’istanza |
-| Upload malevoli | Limiti dimensione, ricodifica immagini, validazione import | Limiti proxy/timeout, spazio e risorse monitorati |
-| DoS e abuso risorse | Un worker, limiti body e auth | Limiti globali di richieste/concorrenza/tempo sul proxy; l’app non è anti-DDoS |
-| Compromissione host | Container non root, filesystem read-only, cap_drop, no-new-privileges | Aggiornare host e runtime, non montare Docker socket, isolare reti |
-| Furto backup | Permessi restrittivi e archivi con checksum | I backup non sono cifrati: cifrare le copie, conservarle fuori host |
-| Ripristino di vecchi accessi | Sessioni/challenge invalidate al restore | Riconciliare password, utenti, recovery code e consensi del backup |
+| Stolen credentials or sessions | Argon2id, HttpOnly/Secure cookies over HTTPS, TOTP MFA, CSRF, revocable sessions | HTTPS, unique passwords, safe recovery-code storage |
+| Login guessing | Account/IP, MFA and setup rate limits | Correct proxy configuration and protection against distributed traffic |
+| Spoofed proxy headers | Explicit trusted IPs/CIDRs, HTTPS origin/host checks | Overwrite forwarded headers and isolate the backend port |
+| Unauthorized data access | Group and administrator authorization | Create only trusted users; the user directory and avatars are instance-wide |
+| Malicious uploads | Size limits, image re-encoding, import validation | Proxy limits/timeouts, disk and resource monitoring |
+| Denial of service | One worker, body and authentication limits | Global request/concurrency/time limits; the app is not an anti-DDoS service |
+| Host compromise | Non-root container, read-only filesystem, dropped capabilities, no-new-privileges | Keep Linux and the runtime updated, do not mount the Docker socket, isolate networks |
+| Stolen backups | Restrictive permissions and checksums | Backups are unencrypted: encrypt copies and store them off-host |
+| Revived old access after restore | Saved sessions and challenges are invalidated | Reconcile passwords, disabled accounts, recovery codes and push consent |
 
-L’amministratore non ottiene automaticamente accesso ai gruppi di cui non è membro.
-I membri di un gruppo possono modificarne i movimenti secondo le regole del prodotto:
-non è un registro immutabile contro gli stessi membri autorizzati.
+Administrators do not automatically gain access to groups they have not joined.
+Group members can modify transactions according to product rules: this is not an
+immutable ledger against authorized members themselves.
 
-Il web push è opzionale e contatta provider esterni. Gli endpoint vengono validati,
-con esclusione di indirizzi privati e loopback; l’operatore può inoltre limitare
-l’egress. Le notifiche possono mostrare informazioni sul blocco schermo: configura
-le preferenze del dispositivo. Disabilita push se non necessario.
+Optional web push contacts external providers. Endpoints are validated and private
+and loopback addresses are excluded; operators may additionally restrict outbound
+traffic. Notifications can reveal information on a lock screen. Configure device
+privacy settings and disable push if unnecessary.
 
-Mantieni aggiornati applicazione, immagine base, dipendenze e proxy. Le immagini
-vanno riferite con versione esplicita o digest; nessun tag `latest` è necessario.
-La validazione CI blocca vulnerabilità high/critical correggibili note allo scanner,
-ma una scansione pulita non dimostra assenza di vulnerabilità.
+Keep the application, base image, dependencies and proxy updated. Reference images
+by explicit version or digest. CI blocks known high/critical vulnerabilities for
+which the scanner reports a fix; this does not mean unfixed findings are absent or
+safe. Review release scan results and residual risks before Internet deployment.
 
-## Segnalare una vulnerabilità
+## Report a vulnerability
 
-Se disponibile nel repository GitHub, usa **Security → Report a vulnerability**
-(Private Vulnerability Reporting). L’operatore della pubblicazione deve abilitarlo
-prima della prima release. Non pubblicare dettagli sfruttabili o dati reali in una
-issue pubblica. Se il canale non è ancora attivo, chiedine l’attivazione senza
-includere dettagli della vulnerabilità.
+Use **Security → Report a vulnerability** when Private Vulnerability Reporting is
+available on the GitHub repository. It must be enabled before the first public
+release. Do not disclose exploit details or real data in a public issue. If the
+private channel is not active, request activation without including sensitive details.
 
-## Riferimenti
+## References
 
-- [OWASP: sicurezza Docker](https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html)
-- [Proxy e HTTPS](docs/proxy.md)
-- [Backup e ripristino](docs/operations.md)
+- [OWASP Docker security guidance](https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html)
+- [Proxy and HTTPS](docs/proxy.md)
+- [Backup and recovery](docs/operations.md)

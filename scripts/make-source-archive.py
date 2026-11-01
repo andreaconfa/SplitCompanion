@@ -7,7 +7,7 @@ import tarfile
 
 ROOT_FILES = {
     'Dockerfile', '.dockerignore', '.gitignore', '.env.example', 'compose.yaml',
-    'README.md', 'LICENSE', 'NOTICE', 'SECURITY.md', 'CONTRIBUTING.md', 'pyproject.toml',
+    'README.md', 'ROADMAP.md', 'LICENSE', 'NOTICE', 'SECURITY.md', 'CONTRIBUTING.md', 'pyproject.toml',
 }
 ROOT_DIRS = {'backend', 'frontend', 'scripts', 'docs', 'wiki', '.github'}
 EXCLUDED = {'.git', '.venv', 'node_modules', 'dist', '__pycache__', '.pytest_cache',
