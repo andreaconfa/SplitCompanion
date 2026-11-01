@@ -27,16 +27,12 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
-    strategy:
-      matrix:
-        arch: [amd64, arm64]
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.release.tag_name }}
-      - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
       - name: Validate version and image name
         id: names
@@ -57,16 +53,16 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/${{ matrix.arch }}
+          platforms: linux/amd64
           load: true
           push: false
-          tags: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}-${{ matrix.arch }}
+          tags: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}
       - run: python3 scripts/container-smoke.py --image "$IMAGE"
         env:
-          IMAGE: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}-${{ matrix.arch }}
+          IMAGE: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}
       - uses: aquasecurity/trivy-action@0.33.1
         with:
-          image-ref: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}-${{ matrix.arch }}
+          image-ref: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}
           exit-code: '1'
           ignore-unfixed: true
           severity: CRITICAL,HIGH
@@ -77,34 +73,15 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - run: docker push "$IMAGE"
         env:
-          IMAGE: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}-${{ matrix.arch }}
-  manifest:
-    needs: image
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.release.tag_name }}
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Publish multi-architecture manifest and corresponding source
+          IMAGE: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}
+      - name: Attach corresponding source and image digest
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
-          REPOSITORY: ${{ github.repository }}
+          IMAGE: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          image="ghcr.io/${REPOSITORY,,}"
-          version="${RELEASE_TAG#v}"
-          docker buildx imagetools create -t "$image:$version" "$image:$version-amd64" "$image:$version-arm64"
-          docker buildx imagetools inspect "$image:$version" > image-digests.txt
+          docker buildx imagetools inspect "$IMAGE" > image-digests.txt
           python3 scripts/make-source-archive.py --output splitcompanion-source.tar.gz
           sha256sum splitcompanion-source.tar.gz > SHA256SUMS
           gh release upload "$RELEASE_TAG" splitcompanion-source.tar.gz SHA256SUMS image-digests.txt compose.yaml .env.example

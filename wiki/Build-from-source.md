@@ -8,15 +8,14 @@ The corresponding source is included in each release and is available at
 From the source directory:
 
 ```sh
-docker build -t splitcompanion:1.2.0-rc.2 .
+docker build --platform linux/amd64 -t splitcompanion:1.2.0-rc.3 .
 cp .env.example .env
 sudo install -d -m 0700 -o 10001 -g 10001 data backups
 docker compose up -d
 docker compose exec app python -m app.cli setup-token
 ```
 
-Add `--platform linux/amd64` or `--platform linux/arm64` to select an architecture
-supported by your builder. Node builds the web app in a separate stage. The runtime
+The distributed container targets **Linux amd64 (x86-64)** only. Node builds the web app in a separate stage. The runtime
 image contains Python, the compiled web app and corresponding source; it does not
 download dependencies or compile code at startup.
 

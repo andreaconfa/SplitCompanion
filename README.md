@@ -10,7 +10,7 @@ friends and small private groups, with a consistent interface across devices.
 
 **[Installation guide](wiki/Installation.md)** · **[Documentation](wiki/Home.md)** · **[Roadmap](ROADMAP.md)** · **[Security](SECURITY.md)**
 
-> **Release candidate 1.2.0-rc.2.** Public registry distribution is being prepared.
+> **Release candidate 1.2.0-rc.3.** Public registry distribution is being prepared.
 > Published releases will provide the exact image name, version and digest.
 > You can build from source or load the prepared Docker image archives.
 
@@ -72,7 +72,7 @@ are development previews. Native iOS source is not included in this repository.*
 ## Quick start on Linux
 
 You need Docker Engine with the Compose plugin and a local disk on a Linux server
-(amd64 or arm64). Run **one replica and one worker**. Do not put SQLite on NFS or SMB.
+(amd64 / x86-64, Intel or AMD). Run **one replica and one worker**. Do not put SQLite on NFS or SMB.
 
 1. Download `compose.yaml` and `.env.example` from the same release.
 2. Prepare the configuration and persistent directories:
@@ -83,7 +83,7 @@ You need Docker Engine with the Compose plugin and a local disk on a Linux serve
    ```
 
 3. Set `SPLIT_COMPANION_IMAGE` in `.env` to the published image name and version or
-   digest. For an image archive, run `docker load -i splitcompanion-<arch>.tar`
+   digest. For an image archive, run `docker load -i splitcompanion-amd64.tar`
    first and use its documented tag. Alternatively, [build from source](docs/native.md).
 4. Start the application and generate the initial setup code:
 

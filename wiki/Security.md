@@ -35,8 +35,11 @@ privacy settings and disable push if unnecessary.
 
 Keep the application, base image, dependencies and proxy updated. Reference images
 by explicit version or digest. CI blocks known high/critical vulnerabilities for
-which the scanner reports a fix; this does not mean unfixed findings are absent or
-safe. Review release scan results and residual risks before Internet deployment.
+which the scanner reports a fix. Unfixed base-image findings are advisory and do
+not automatically block a candidate release. Publish scan results with the release
+and review residual risks before Internet deployment. Self-hosting makes the
+operator responsible for deployment, access and updates; it does not make known
+vulnerabilities harmless or remove the need to maintain the application.
 
 ## Report a vulnerability
 

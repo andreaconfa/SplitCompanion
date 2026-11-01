@@ -6,7 +6,7 @@ schedule. Priorities may change with feedback, available time and adoption.
 
 ## First public release
 
-- [ ] Publish versioned Linux amd64/arm64 images and matching source archives.
+- [ ] Publish versioned Linux amd64 images and matching source archives.
 - [ ] Complete fresh-install, upgrade and restore checks for the supported deployments.
 - [ ] Refine onboarding and documentation from feedback from early self-hosters.
 - [ ] Continue dependency updates, security review and accessibility improvements.

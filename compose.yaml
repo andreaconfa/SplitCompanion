@@ -1,7 +1,8 @@
 name: splitcompanion
 services:
   app:
-    image: ${SPLIT_COMPANION_IMAGE:-splitcompanion:1.2.0-rc.2}
+    platform: linux/amd64
+    image: ${SPLIT_COMPANION_IMAGE:-splitcompanion:1.2.0-rc.3}
     restart: unless-stopped
     init: true
     user: "10001:10001"
