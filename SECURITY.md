@@ -63,6 +63,9 @@ use the standalone Compose file. Protection mode remains enabled, and the packag
 requests no privileged mode, host networking, Docker socket or Home Assistant API.
 Keep Supervisor and Home Assistant OS updated.
 
-The initial setup code is temporarily stored in the App's protected options, like
-other App secrets. Clear it after completing setup. Home Assistant backups contain
-these options and application data; encrypt them and keep a copy off the device.
+The App generates a one-time setup code and deliberately prints it to the protected
+Home Assistant App log while initial setup is pending. Only its hash is stored in
+the database. It expires after 30 minutes; restarting replaces it without clearing
+an active attempt limit. Completed instances never generate or print a code. Treat
+pending-setup logs as secrets. Home Assistant backups contain application data and
+secrets; encrypt them and keep a copy off the device.

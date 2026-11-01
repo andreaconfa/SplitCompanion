@@ -2,7 +2,7 @@
 import json
 import os
 from pathlib import Path
-import re
+import secrets
 import sys
 
 
@@ -29,16 +29,12 @@ def configuration(options):
         if key == 'backup_retention' and not 1 <= value <= 365:
             raise ValueError('Backup retention must be between 1 and 365.')
         env['SPLIT_COMPANION_' + key.upper()] = str(value).lower() if isinstance(value, bool) else str(value)
-    code = options.get('initial_setup_code', '')
-    if not isinstance(code, str) or (code and not re.fullmatch(r'[A-Za-z0-9_-]{32,128}', code)):
-        raise ValueError('Initial setup code must contain 32–128 random letters, digits, hyphens or underscores.')
-    return env, code
+    # Older App versions stored a manual code here. Ignore it on upgrade.
+    return env
 
 
-def authorize_setup(engine, code):
-    """Explicit operator secret; same code never extends its expiry or resets attempts."""
-    if not code:
-        return
+def authorize_setup(engine):
+    """Generate an operator-only code on startup, never reopen completed setup."""
     from sqlalchemy import text
     from sqlmodel import Session
     from app.auth import hash_token
@@ -48,20 +44,21 @@ def authorize_setup(engine, code):
     with Session(engine) as session:
         session.execute(text('BEGIN IMMEDIATE'))
         state = setup_state(session)
-        digest = hash_token(code)
-        if not state.completed and state.token_hash != digest:
-            state.token_hash = digest
+        code = None
+        if not state.completed:
+            code = secrets.token_urlsafe(32)
+            state.token_hash = hash_token(code)
             state.expires_at = now() + TOKEN_LIFETIME
-            state.attempts = 0
-            state.attempt_window_expires_at = None
+            # A restart must not clear an active failed-attempt window.
             session.add(state)
         session.commit()
+        return code
 
 
 def main():
     os.umask(0o077)
     options = json.loads(Path('/data/options.json').read_text())
-    env, code = configuration(options)
+    env = configuration(options)
     os.environ.update(env)
     # Supervisor owns /data and options.json. Only our dedicated directories change owner.
     for path in (Path('/data/instance'), Path('/data/backups')):
@@ -85,7 +82,13 @@ def main():
     with instance_lock(Path(cfg.db).parent / '.instance.lock'):
         prepare(cfg)
         from app.db import engine
-        authorize_setup(engine, code)
+        code = authorize_setup(engine)
+        if code:
+            # Intentional one-time delivery to the operator's protected HA App log.
+            print('Split Companion initial setup code: ' + code, flush=True)
+            print('Open Web UI and enter this code within 30 minutes. '
+                  'Keep it private. Restart the App for a new code if needed. '
+                  'Codes are no longer generated after setup is completed.', flush=True)
         del code, options
         import uvicorn
         uvicorn.run('app.main:app', host=cfg.host, port=cfg.port, workers=1,
@@ -93,4 +96,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except ValueError as error:
+        print(f'Split Companion configuration error: {error}', file=sys.stderr, flush=True)
+        sys.exit(1)

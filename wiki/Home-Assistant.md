@@ -15,19 +15,21 @@ entities. Home Assistant Container users should use the standalone Docker image.
 3. Install **Split Companion** from this repository.
 4. In **Configuration**, choose your IANA timezone, for example `Europe/London`.
    Keep two-factor authentication enabled.
-5. Generate a random setup code in a password manager: 32–128 letters, digits,
-   hyphens or underscores. Paste it into **Initial setup code** and save.
-6. Start the App, then choose **Open Web UI**. Use the same setup code to create
-   the first administrator. The code expires after 30 minutes. If it expires,
-   choose a new random code, save and restart. Restarting with the same code does
-   not renew it or reset failed attempts.
-7. Complete two-factor authentication, keep recovery codes safe, then clear
-   **Initial setup code** in the App configuration and save. Setup stays closed.
+5. Start the App and open its **Log** tab. Copy the automatically generated value
+   after **Split Companion initial setup code:**.
+6. Choose **Open Web UI** and paste the code to create the first administrator
+   within 30 minutes. If it expires or you lose it, restart the App and use the
+   newest code from the Log tab. A restart replaces the previous code.
+7. Complete two-factor authentication and keep recovery codes safe. After setup,
+   the code is invalidated and subsequent starts no longer generate or print one.
 8. Enable **Start on boot** and optionally **Watchdog**.
 
-The setup code is stored in Home Assistant's protected App options while it is
-configured. Split Companion stores only its hash in its database and never prints
-it in ordinary logs. Do not share App configuration files or backups.
+No manual setup-code option is required. Old `initial_setup_code` options from
+previous releases are ignored, including values that previously prevented startup.
+The database stores only the code's hash. The initial code is intentionally shown
+in the protected Home Assistant App log so the operator can retrieve it; do not
+share that log while setup is pending. Application request logs never contain it.
+Existing configured instances keep their users and data and skip this step.
 
 ## Network and HTTPS
 
@@ -82,8 +84,9 @@ subscription charges keep their currencies. There is no currency conversion.
 
 - **App missing:** update the repository list and check that the device uses
   amd64 or aarch64. 32-bit ARM is not supported.
-- **Setup code rejected:** use a fresh random code and restart; confirm it meets
-  the length/character rules. Never paste a login password into this field.
+- **Setup code rejected:** restart the App and copy the newest automatic code from
+  its Log tab. It expires after 30 minutes. After too many failed attempts, wait
+  for the attempt limit to clear; restarting does not bypass that limit.
 - **App fails to start:** check timezone, origin, proxy ranges and writable storage.
   Errors never require deleting the database.
 - **Open Web UI unavailable:** check the configured host port and firewall.

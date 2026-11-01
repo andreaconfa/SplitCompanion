@@ -47,50 +47,47 @@ class HomeAssistantSetupTests(unittest.TestCase):
         with Session(self.engine) as session:
             return session.get(SetupState, 1)
 
-    def test_empty_option_does_not_create_or_rotate_a_code(self):
-        runner.authorize_setup(self.engine, "")
-        self.assertIsNone(self.state())
-        runner.authorize_setup(self.engine, "a" * 40)
-        before = self.state()
-        runner.authorize_setup(self.engine, "")
-        self.assertEqual(self.state(), before)
+    def test_automatic_code_is_random_single_use_hash_with_30_minute_expiry(self):
+        code = runner.authorize_setup(self.engine)
+        self.assertRegex(code, r"^[A-Za-z0-9_-]{43}$")
+        state = self.state()
+        self.assertEqual(state.token_hash, hash_token(code))
+        self.assertNotEqual(state.token_hash, code)
+        self.assertGreater(utc(state.expires_at), now() + timedelta(minutes=29))
+        self.assertLessEqual(utc(state.expires_at), now() + timedelta(minutes=30))
 
-    def test_same_code_restart_keeps_expiry_and_throttling_even_when_expired(self):
-        code = "a" * 40
-        runner.authorize_setup(self.engine, code)
+    def test_restart_rotates_code_without_clearing_active_throttle(self):
+        first = runner.authorize_setup(self.engine)
         with Session(self.engine) as session:
             state = session.get(SetupState, 1)
-            self.assertEqual(state.token_hash, hash_token(code))
-            self.assertNotEqual(state.token_hash, code)
-            self.assertGreater(utc(state.expires_at), now())
-            state.expires_at = now() - timedelta(minutes=1)
             state.attempts = 5
             state.attempt_window_expires_at = now() + timedelta(minutes=10)
             session.add(state)
             session.commit()
         before = self.state()
-        runner.authorize_setup(self.engine, code)
+        second = runner.authorize_setup(self.engine)
         after = self.state()
-        self.assertEqual(after.token_hash, before.token_hash)
-        self.assertEqual(after.expires_at, before.expires_at)
+        self.assertNotEqual(first, second)
+        self.assertEqual(after.token_hash, hash_token(second))
         self.assertEqual(after.attempts, 5)
         self.assertEqual(after.attempt_window_expires_at, before.attempt_window_expires_at)
 
-    def test_explicit_new_code_rotates_uncompleted_setup(self):
-        runner.authorize_setup(self.engine, "a" * 40)
-        before = self.state()
-        runner.authorize_setup(self.engine, "b" * 40)
-        after = self.state()
-        self.assertNotEqual(after.token_hash, before.token_hash)
-        self.assertEqual(after.token_hash, hash_token("b" * 40))
-        self.assertFalse(after.completed)
-        self.assertGreater(utc(after.expires_at), now())
+    def test_restart_renews_expired_code(self):
+        first = runner.authorize_setup(self.engine)
+        with Session(self.engine) as session:
+            state = session.get(SetupState, 1)
+            state.expires_at = now() - timedelta(minutes=1)
+            session.add(state)
+            session.commit()
+        second = runner.authorize_setup(self.engine)
+        self.assertNotEqual(first, second)
+        self.assertGreater(utc(self.state().expires_at), now())
 
     def test_completed_setup_cannot_reopen_even_if_users_were_removed(self):
         with Session(self.engine) as session:
             session.add(SetupState(id=1, completed=True))
             session.commit()
-        runner.authorize_setup(self.engine, "a" * 40)
+        self.assertIsNone(runner.authorize_setup(self.engine))
         state = self.state()
         self.assertTrue(state.completed)
         self.assertIsNone(state.token_hash)
@@ -99,13 +96,13 @@ class HomeAssistantSetupTests(unittest.TestCase):
             self.assertEqual(session.exec(select(User)).all(), [])
 
     def test_existing_user_closes_uncompleted_gate_and_discards_code(self):
-        runner.authorize_setup(self.engine, "a" * 40)
+        runner.authorize_setup(self.engine)
         with Session(self.engine) as session:
             session.add(
                 User(username="existing", display_name="Existing", password_hash="disabled")
             )
             session.commit()
-        runner.authorize_setup(self.engine, "b" * 40)
+        self.assertIsNone(runner.authorize_setup(self.engine))
         state = self.state()
         self.assertTrue(state.completed)
         self.assertIsNone(state.token_hash)

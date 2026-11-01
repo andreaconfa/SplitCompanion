@@ -22,8 +22,5 @@ configuration:
     name: Daily backup hour
   backup_retention:
     name: Daily backups to keep
-  initial_setup_code:
-    name: Initial setup code
-    description: Random 32–128-character code from your password manager. Use once in the web setup within 30 minutes, then clear this field.
 network:
   8000/tcp: HTTP web app and API; configure external HTTPS for PWA or Internet access.

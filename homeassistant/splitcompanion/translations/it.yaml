@@ -22,8 +22,5 @@ configuration:
     name: Ora del backup giornaliero
   backup_retention:
     name: Backup giornalieri da conservare
-  initial_setup_code:
-    name: Codice di configurazione iniziale
-    description: Codice casuale di 32–128 caratteri generato dal gestore password. Usalo nel browser entro 30 minuti, poi svuota questo campo.
 network:
   8000/tcp: App web e API HTTP; configura HTTPS esterno per PWA o accesso Internet.

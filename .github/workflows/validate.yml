@@ -79,6 +79,6 @@ jobs:
           load: true
           tags: splitcompanion:ha-ci
           build-args: |
-            BUILD_VERSION=1.2.0-rc.5-homeassistant
+            BUILD_VERSION=1.2.0-rc.6-homeassistant
             BUILD_ARCH=${{ matrix.arch }}
       - run: python3 scripts/homeassistant-smoke.py --image splitcompanion:ha-ci
