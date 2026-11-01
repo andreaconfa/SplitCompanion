@@ -65,14 +65,14 @@ jobs:
       - run: python3 scripts/container-smoke.py --image "$IMAGE"
         env:
           IMAGE: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}
-      - uses: aquasecurity/trivy-action@0.33.1
+      - uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.33.1
         with:
           image-ref: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}
           exit-code: '1'
           ignore-unfixed: true
           severity: CRITICAL,HIGH
       - name: Record remaining high and critical findings
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.33.1
         with:
           image-ref: ${{ steps.names.outputs.image }}:${{ steps.names.outputs.version }}
           format: json
